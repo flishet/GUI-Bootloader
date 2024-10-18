@@ -9,8 +9,10 @@
 #include <QFileDialog>
 #include <QLabel>
 #include <qdebug.h>
-
-
+#include <QSerialPort>
+#include <QSerialPortInfo>
+#include <QMessageBox>
+#include <QTimer>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -32,14 +34,27 @@ private slots:
 
     void convert_print(QImage image,QByteArray *data);
 
+    void on_btn_port_clicked();
+
+    void on_pushButton_2_clicked();
+
+    void on_btn_send_clicked();
+
+    void ReadyReads(void);
+
+    void IntervalTimer(void);
+
 private:
     Ui::MainWindow *ui;
     QImage image;
-
-
+    QSerialPort *serial;
+    QTimer *time;
     QByteArray img;
+    QByteArray data;
     QLabel *lbl;
-
+    int count_port=0;
+    QMessageBox Msg;
+    uint16_t index=0;
 
 };
 #endif // MAINWINDOW_H
