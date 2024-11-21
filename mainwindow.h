@@ -30,10 +30,6 @@ private slots:
 
     void on_btn_open_clicked();
 
-    void on_btn_convert_clicked();
-
-    void convert_print(QImage image,QByteArray *data);
-
     void on_btn_port_clicked();
 
     void on_pushButton_2_clicked();
@@ -46,14 +42,13 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    QImage image;
     QSerialPort *serial;
     QTimer *time;
-    QByteArray img;
-    QByteArray data;
-    QLabel *lbl;
-    int count_port=0;
     QMessageBox Msg;
+    QFile file;
+    QByteArray binfile;
+
+    int count_port=0;
     uint16_t index=0;
 
 };
