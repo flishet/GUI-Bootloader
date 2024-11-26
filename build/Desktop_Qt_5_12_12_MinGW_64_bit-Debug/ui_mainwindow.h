@@ -9,12 +9,14 @@
 #ifndef UI_MAINWINDOW_H
 #define UI_MAINWINDOW_H
 
+#include <QtCore/QLocale>
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QMainWindow>
+#include <QtWidgets/QProgressBar>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QWidget>
@@ -32,6 +34,8 @@ public:
     QPushButton *pushButton_2;
     QPushButton *btn_send;
     QLabel *label;
+    QProgressBar *progressBar;
+    QPushButton *btn_send_2;
     QStatusBar *statusbar;
 
     void setupUi(QMainWindow *MainWindow)
@@ -66,7 +70,17 @@ public:
         btn_send->setGeometry(QRect(140, 80, 91, 21));
         label = new QLabel(centralwidget);
         label->setObjectName(QString::fromUtf8("label"));
-        label->setGeometry(QRect(140, 20, 49, 16));
+        label->setGeometry(QRect(140, 20, 121, 16));
+        progressBar = new QProgressBar(centralwidget);
+        progressBar->setObjectName(QString::fromUtf8("progressBar"));
+        progressBar->setGeometry(QRect(140, 110, 118, 23));
+        progressBar->setLocale(QLocale(QLocale::English, QLocale::UnitedStates));
+        progressBar->setValue(0);
+        progressBar->setAlignment(Qt::AlignmentFlag::AlignCenter);
+        progressBar->setTextVisible(true);
+        btn_send_2 = new QPushButton(centralwidget);
+        btn_send_2->setObjectName(QString::fromUtf8("btn_send_2"));
+        btn_send_2->setGeometry(QRect(300, 80, 91, 21));
         MainWindow->setCentralWidget(centralwidget);
         statusbar = new QStatusBar(MainWindow);
         statusbar->setObjectName(QString::fromUtf8("statusbar"));
@@ -86,6 +100,7 @@ public:
         pushButton_2->setText(QApplication::translate("MainWindow", "Refresh Port", nullptr));
         btn_send->setText(QApplication::translate("MainWindow", "Send", nullptr));
         label->setText(QApplication::translate("MainWindow", "TextLabel", nullptr));
+        btn_send_2->setText(QApplication::translate("MainWindow", "Send", nullptr));
     } // retranslateUi
 
 };

@@ -15,7 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
     serial->setParity(QSerialPort::NoParity);
     serial->setStopBits(QSerialPort::OneStop);
     serial->setFlowControl(QSerialPort::NoFlowControl);
-
+    ui->progressBar->setVisible(false);
     foreach(QSerialPortInfo port, QSerialPortInfo::availablePorts())
     {
         ui->combo_port->addItem(port.portName());
@@ -30,7 +30,8 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::IntervalTimer(void)
+
+void MainWindow::SnedData(void)
 {
     QByteArray temp;
     quint16 sum=0;
@@ -42,10 +43,28 @@ void MainWindow::IntervalTimer(void)
     temp.append(0xc1);
     temp.append(0xb7);
     temp.append(0x15);
-
     if(index>=binfile.length()/16)
     {
+        all2byte.all=index;
+        temp.append(all2byte.byte[0]);
+        temp.append(all2byte.byte[1]);
+        temp.append(binfile.length()%16);
+
+        for(int i=0;i<binfile.length()%16;i++)
+        {
+            sum+=(quint8)binfile.at(index*16+i);
+            temp.append(binfile.at(index*16+i));
+        }
+        all2byte.all=sum;
+        temp.append(all2byte.byte[0]);
+        temp.append(all2byte.byte[1]);
+        // qDebug()<<index;
+        serial->write(temp,temp.length());
+        index++;
         time->stop();
+        ui->progressBar->setValue((100/(float)len)*index);
+        // Msg.information(nullptr,"information","send ok",QMessageBox::Ok);
+        ui->progressBar->setVisible(false);
     }
     else
     {
@@ -62,28 +81,88 @@ void MainWindow::IntervalTimer(void)
         all2byte.all=sum;
         temp.append(all2byte.byte[0]);
         temp.append(all2byte.byte[1]);
-        qDebug()<<hex<<sum<<index;
+        // qDebug()<<index;
         index++;
         serial->write(temp,temp.length());
+        ui->progressBar->setValue((100/(float)len)*index);
+    }
+}
+
+void MainWindow::CheckData(QByteArray Data)
+{
+    union {
+        uint8_t byte[2];
+        uint16_t all;
+    }all2byte;
+
+    int count_rec=0;
+    quint8 temp[20];
+
+    // qDebug()<< Data.length()<< ++packet_count;
+    for (int i = 0; i < Data.length(); ++i)
+    {
+        header2 = header1;
+        header1 =(quint8) Data[i];
+
+        if (header2 == 0xC1 && header1 == 0xB7 && flag_headers==false)
+        {
+            flag_headers = true;
+            count_rec=0;
+        }
+        else if(flag_headers == true)
+        {
+            temp[count_rec]=(quint8)Data[i];
+            qDebug()<<hex<<temp[0]<<count_rec<<Data.toHex(' ');
+            if(count_rec==4)
+            {
+                all2byte.byte[0]=temp[2];
+                all2byte.byte[1]=temp[3];
+                if(all2byte.all==(temp[0]+temp[1]))
+                {
+                    all2byte.byte[0]=temp[0];
+                    all2byte.byte[1]=temp[1];
+                    if((all2byte.all+1)==index)
+                    {
+                        flag_headers=false;
+                        flag_send=true;
+                    }
+                }
+            }
+            else
+                count_rec++;
+        }
+    }
+}
+
+void MainWindow::IntervalTimer(void)
+{
+    if(flag_send)
+    {
+        flag_send=false;
+        SnedData();
     }
 }
 
 void MainWindow::ReadyReads(void)
 {
-//    static int i=0;
-//    ui->btn_send->setText(QString::number(i++,10));
+    QByteArray data;
+    data=serial->readAll();
+    // for(int i=0;i<data.length();i++)
+    CheckData(data);
 }
 
 void MainWindow::on_btn_open_clicked()
 {
-    QString filePath = QFileDialog::getOpenFileName(this, "Open Binary File", "", "BIN (*.bin)");
+    QString filePath ="D:/ali/LPC2/Objects/b.bin"; //QFileDialog::getOpenFileName(this, "Open Binary File", "", "BIN (*.bin)");
     if (!filePath.isEmpty())
     {
         file.setFileName(filePath);
         file.open(QIODevice::ReadOnly);
         binfile=file.readAll();
-        ui->label->setText(QString::number(file.size(),10)+" Byte");
-        qDebug()<<binfile<<filePath;
+        len=file.size()/16;
+        if((file.size()%16)!=0)
+            len++;
+        ui->label->setText(QString::number(file.size(),10)+" Byte"+" Len="+QString::number(len,10));
     }
     else
         Msg.warning(nullptr,"اخطار","فایلی انتخاب نشده است",QMessageBox::Ok);
@@ -128,8 +207,18 @@ void MainWindow::on_pushButton_2_clicked()
 
 void MainWindow::on_btn_send_clicked()
 {
-    index=0;
+
+    ui->progressBar->setVisible(true);
     time->start(20);
+    index=0;
+    SnedData();
+    // flag_send=true;
 }
 
+
+
+void MainWindow::on_btn_send_2_clicked()
+{
+    SnedData();
+}
 

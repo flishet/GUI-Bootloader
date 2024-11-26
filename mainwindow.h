@@ -40,6 +40,12 @@ private slots:
 
     void IntervalTimer(void);
 
+    void SnedData(void);
+
+    void CheckData(QByteArray Data);
+
+    void on_btn_send_2_clicked();
+
 private:
     Ui::MainWindow *ui;
     QSerialPort *serial;
@@ -47,9 +53,17 @@ private:
     QMessageBox Msg;
     QFile file;
     QByteArray binfile;
-
+    quint8 temp[2];
     int count_port=0;
     uint16_t index=0;
+    int len=0;
+    quint8 header1=0;
+    bool flag_send=false;
+    quint8 buff_recive[20];
+    int count=0;
+    quint32 chsum=0;
 
+    quint8 header2 = 0;
+    bool flag_headers = false;
 };
 #endif // MAINWINDOW_H
