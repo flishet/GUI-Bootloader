@@ -90,13 +90,13 @@ void MainWindow::SnedData(void)
 
 void MainWindow::CheckData(QByteArray Data)
 {
-    union {
-        uint8_t byte[2];
-        uint16_t all;
-    }all2byte;
+    //    union {
+    //        uint8_t byte[2];
+    //        uint16_t all;
+    //    }all2byte;
 
-    int count_rec=0;
-    quint8 temp[20];
+    //    int count_rec=0;
+    //    quint8 temp[20];
 
     // qDebug()<< Data.length()<< ++packet_count;
     for (int i = 0; i < Data.length(); ++i)
@@ -107,29 +107,91 @@ void MainWindow::CheckData(QByteArray Data)
         if (header2 == 0xC1 && header1 == 0xB7 && flag_headers==false)
         {
             flag_headers = true;
-            count_rec=0;
         }
         else if(flag_headers == true)
         {
-            temp[count_rec]=(quint8)Data[i];
-            qDebug()<<hex<<temp[0]<<count_rec<<Data.toHex(' ');
-            if(count_rec==4)
+            if(counter_data == 0)
             {
-                all2byte.byte[0]=temp[2];
-                all2byte.byte[1]=temp[3];
-                if(all2byte.all==(temp[0]+temp[1]))
+                data[counter_data] = Data[i];
+                counter_data++;
+            }
+            else if(counter_data == 1)
+            {
+                data[counter_data] = Data[i];
+                counter_data++;
+            }
+            else if(counter_data == 2)
+            {
+                data[counter_data] = Data[i];
+                counter_data++;
+            }
+            else if(counter_data == 3)
+            {
+                data[counter_data] = Data[i];
+                counter_data++;
+            }
+
+            if(counter_data == 4)
+            {
+                quint16 sum = (quint8)data[0] + (quint8)data[1];
+
+                quint16 check_sum = (quint8)data[2] + (quint8)data[3] * 256;
+
+                qDebug()<< __LINE__<< counter_data << sum << check_sum;
+
+                if( sum == check_sum )
                 {
-                    all2byte.byte[0]=temp[0];
-                    all2byte.byte[1]=temp[1];
-                    if((all2byte.all+1)==index)
-                    {
+                    quint16 value = 0;
+                    memcpy(&value, data.data(), 2);
+
+
+                    if( value + 1 == index ){
                         flag_headers=false;
                         flag_send=true;
+
+                        qDebug()<< __LINE__<< ", value:" << (quint16)value << Data.toHex(' ') << ", index:" << index;
                     }
+
                 }
+
+                counter_data = 0;
+                data.clear();
             }
-            else
-                count_rec++;
+
+
+            //            temp[count_rec]=(quint8)Data[i];
+            //            //            qDebug()<<hex<<temp[0]<<count_rec<<Data.toHex(' ');
+            //            //            if(count_rec==6)
+            //            {
+            //                quint16 value = 0;
+            //                memcpy(&value, Data.data() + i, 2);
+
+            //                qDebug()<< __LINE__<< ", value:" << (quint16)value << Data.toHex(' ') << ", index:" << index;
+            //                //                qDebug()<< "value:" << value << ", index:" << index;
+
+            //                if ( value + 1 == index ){
+
+
+            //                    flag_headers=false;
+            //                    flag_send=true;
+            //                    break;
+            //                }
+            //                //                all2byte.byte[0]=temp[4];
+            //                //                all2byte.byte[1]=temp[5];
+            //                //                if(all2byte.all==(temp[2]+temp[3]))
+            //                //                {
+            //                //                    all2byte.byte[0]=temp[2];
+            //                //                    all2byte.byte[1]=temp[3];
+            //                //                    if((all2byte.all+1)==index)
+            //                //                    {
+            //                //                        flag_headers=false;
+            //                //                        flag_send=true;
+            //                //                        qDebug()<< __LINE__;
+            //                //                    }
+            //                //                }
+            //            }
+            //            //            else
+            //            //                count_rec++;
         }
     }
 }
@@ -153,7 +215,7 @@ void MainWindow::ReadyReads(void)
 
 void MainWindow::on_btn_open_clicked()
 {
-    QString filePath ="D:/ali/LPC2/Objects/b.bin"; //QFileDialog::getOpenFileName(this, "Open Binary File", "", "BIN (*.bin)");
+    QString filePath ="C:/Users/RayanRoshd/Desktop/mohsen/b.bin"; //QFileDialog::getOpenFileName(this, "Open Binary File", "", "BIN (*.bin)");
     if (!filePath.isEmpty())
     {
         file.setFileName(filePath);

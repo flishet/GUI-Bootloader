@@ -65,5 +65,8 @@ private:
 
     quint8 header2 = 0;
     bool flag_headers = false;
+
+    QByteArray data;
+    quint16 counter_data;
 };
 #endif // MAINWINDOW_H
