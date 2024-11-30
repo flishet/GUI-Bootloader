@@ -13,6 +13,9 @@
 #include <QSerialPortInfo>
 #include <QMessageBox>
 #include <QTimer>
+#include <QThread>
+#include <chrono>
+#include <thread>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -42,16 +45,20 @@ private slots:
 
     void SnedData(void);
 
-    void CheckData(QByteArray Data);
+    void CheckData(unsigned char Data);
 
     void on_btn_send_2_clicked();
+
+    void on_btn_send_3_clicked();
+
+    void on_btn_send_4_clicked();
 
 private:
     Ui::MainWindow *ui;
     QSerialPort *serial;
     QTimer *time;
     QMessageBox Msg;
-    QFile file;
+    QFile file,out;
     QByteArray binfile;
     quint8 temp[2];
     int count_port=0;
@@ -65,8 +72,14 @@ private:
 
     quint8 header2 = 0;
     bool flag_headers = false;
-
+    bool flag_write=false;
     QByteArray data;
     quint16 counter_data;
+
+    QString infofile="LPC1788 TU550 V10.15";
+    QByteArray temp2;
+
+    void sendLength(quint8 cmd);
+    void AckRecive(quint8 cmd);
 };
 #endif // MAINWINDOW_H

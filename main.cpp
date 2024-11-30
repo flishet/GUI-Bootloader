@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
     MainWindow w;
    // w.show();
     MainWindow window;
-    window.setWindowTitle("Text to Image Converter");
+    window.setWindowTitle("Boot Loader For LPC1788");
     window.resize(500, 300);
     window.show();
 
