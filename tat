@@ -1,0 +1,82 @@
+[33mcommit 18a7313d86b4026874502a0a8ce4714768fe2c2b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mbootloader[m[33m)[m
+Author: mohsen <ttlcmosic@gmail.com>
+Date:   Sun Dec 1 17:16:12 2024 +0330
+
+    -be avale file bin header valid ezafeh shod -->1403/09/11
+
+[33mcommit 613cc3235b8d61a3aa9660ea216378a830462d01[m[33m ([m[1;31morigin/bootloader[m[33m)[m
+Author: mohsen <ttlcmosic@gmail.com>
+Date:   Sat Nov 30 17:49:53 2024 +0330
+
+    -ezafeh kardane header be avale file bin
+    
+    -moshkele erase dar avale write kardan hal shod
+    
+    -ba zadane kelide program montazere reset kardane micro mishavad -->1403/09/10
+
+[33mcommit 60464b10c67b9c7d73f3ca8f6793d39c6193e406[m
+Author: Mostafa Mohammadi <1994mmgh@gmail.com>
+Date:   Tue Nov 26 13:06:18 2024 +0330
+
+    -ersal dorst tar shod va ack -->1403/09/06.
+
+[33mcommit b14612696f17801c450d7cbd347a3ec9e06401db[m
+Author: mohsen <ttlcmosic@gmail.com>
+Date:   Tue Nov 26 15:30:39 2024 +0330
+
+    -ersal dorst shod va ack -->1403/09/06
+
+[33mcommit 51725f74a1c8f541e927825a9e5cee10477d8fcc[m
+Author: mohsen <ttlcmosic@gmail.com>
+Date:   Thu Nov 21 13:00:54 2024 +0330
+
+    -ersale file .bin baraye bootloader -->1403/09/01
+
+[33mcommit 6ec12ece9b7a56f15c347a9197069d0882d0845d[m
+Author: flishet <ttlcmosic@gmail.com>
+Date:   Fri Oct 18 23:15:48 2024 +0330
+
+    -eslahe ersale file
+
+[33mcommit 31a6cec58dfb6d50a1472c624a3f623c754b2af9[m
+Merge: e6876ff e853a0e
+Author: flishet <ttlcmosic@gmail.com>
+Date:   Fri Oct 18 18:55:03 2024 +0330
+
+    Merge branch 'master' of https://github.com/flishet/txt2img
+
+[33mcommit e6876ff7f86d225d8ce585e6d36c19209cfa624c[m
+Author: flishet <ttlcmosic@gmail.com>
+Date:   Fri Oct 18 18:50:50 2024 +0330
+
+    -port serial ezafeh shod
+    
+    -protocole ersal emal shod
+    
+    -ersal har 20ms anjam mishavd -->1403/07/27
+
+[33mcommit e853a0e76eb3e5379fa00747932e7add5e9f2f18[m
+Author: flishet <ttlcmosic@gmail.com>
+Date:   Fri Oct 18 18:50:50 2024 +0330
+
+    -port serial ezafeh shod
+    
+    -protocole ersal emal shod
+    
+    -ersal har 20ms anjam mishavd
+
+[33mcommit 048e592385a8f20b6d77c16acc68e94147178fb9[m
+Author: flishet <59050945+flishet@users.noreply.github.com>
+Date:   Wed Oct 9 16:10:59 2024 +0330
+
+    Create README.md
+
+[33mcommit 74bd2e2d07b29dcb7fb0c0979e7dfb53150e8d0f[m
+Author: mohsen <ttlcmosic@gmail.com>
+Date:   Wed Oct 9 15:59:30 2024 +0330
+
+    -tabdile text be image
+    
+    -entekhabe image az hard
+    
+    -tolide data baraye print

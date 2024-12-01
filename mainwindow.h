@@ -29,6 +29,8 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+
+
 private slots:
 
     void on_btn_open_clicked();
@@ -37,7 +39,7 @@ private slots:
 
     void on_pushButton_2_clicked();
 
-    void on_btn_send_clicked();
+    void on_btn_program_clicked();
 
     void ReadyReads(void);
 
@@ -47,11 +49,13 @@ private slots:
 
     void CheckData(unsigned char Data);
 
-    void on_btn_send_2_clicked();
+    void on_btn_boot_clicked();
 
-    void on_btn_send_3_clicked();
+    uint16_t CRC16_Modbus(QByteArray data, quint16 length);
 
-    void on_btn_send_4_clicked();
+    void on_btn_app_clicked();
+
+    void on_btn_convert_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -75,9 +79,10 @@ private:
     bool flag_write=false;
     QByteArray data;
     quint16 counter_data;
+    bool flag_file_valid=false;
 
-    QString infofile="LPC1788 TU550 V10.15";
-    QByteArray temp2;
+
+
 
     void sendLength(quint8 cmd);
     void AckRecive(quint8 cmd);

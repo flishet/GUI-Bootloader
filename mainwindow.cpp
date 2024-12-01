@@ -17,9 +17,9 @@ MainWindow::MainWindow(QWidget *parent)
     serial->setFlowControl(QSerialPort::NoFlowControl);
     ui->progressBar->setVisible(false);
     ui->btn_open->setEnabled(false);
-    ui->btn_send->setEnabled(false);
-    ui->btn_send_2->setEnabled(false);
-    ui->btn_send_3->setEnabled(false);
+    ui->btn_program->setEnabled(false);
+    ui->btn_app->setEnabled(false);
+    ui->btn_boot->setEnabled(false);
     foreach(QSerialPortInfo port, QSerialPortInfo::availablePorts())
     {
         ui->combo_port->addItem(port.portName());
@@ -73,6 +73,9 @@ void MainWindow::SnedData(void)
         ui->progressBar->setValue((100/(float)len)*index);
         // Msg.information(nullptr,"information","send ok",QMessageBox::Ok);
         ui->progressBar->setVisible(false);
+        ui->btn_program->setEnabled(true);
+        ui->btn_app->setEnabled(true);
+        ui->btn_boot->setEnabled(true);
         ui->label_2->setText(" ");
     }
     else
@@ -120,6 +123,10 @@ void MainWindow::AckRecive(quint8 cmd)
         qDebug()<< __LINE__;
         flag_send=true;
         ui->label_2->setText("Programming...");
+        // ui->btn_open->setEnabled(false);
+        ui->btn_program->setEnabled(false);
+        ui->btn_app->setEnabled(false);
+        ui->btn_boot->setEnabled(false);
         break;
     }
     case 0x16:{
@@ -128,7 +135,7 @@ void MainWindow::AckRecive(quint8 cmd)
         flag_write=false;
         sendLength(0x18);
         break;
-        }
+    }
     }
 }
 
@@ -142,6 +149,7 @@ void MainWindow::CheckData(unsigned char Data)
     {
         flag_headers = true;
         counter_data=0;
+        // qDebug()<<__LINE__;
     }
     else if(flag_headers == true)
     {
@@ -188,21 +196,44 @@ void MainWindow::ReadyReads(void)
 
 void MainWindow::on_btn_open_clicked()
 {
-    QString filePath ="C:/Users/RayanRoshd/Desktop/mohsen/b.bin"; //QFileDialog::getOpenFileName(this, "Open Binary File", "", "BIN (*.bin)");
+    QByteArray temp;
+    quint16 crc2=0;
+    quint16 len2;
+    QString filePath =/*"C:/Users/RayanRoshd/Desktop/mohsen/b.bin"; */QFileDialog::getOpenFileName(this, "Open Binary File", "", "BIN (*.bin)");
     if (!filePath.isEmpty())
     {
         file.setFileName(filePath);
         file.open(QIODevice::ReadWrite);
-        binfile=file.readAll();
+        temp=file.readAll();
         file.close();
-        qDebug()<<__LINE__;
-        len=binfile.size()/16;
-        if((binfile.size()%16)!=0)
-            len++;
-        ui->label->setText(QString::number(binfile.size(),10)+" Byte"+" Len="+QString::number(len,10));
+        len2=temp[0];
+        quint16 crc=CRC16_Modbus(temp,len2+1);
+        memcpy(&crc2,temp.data()+len2+1,2);
+
+        if(crc==crc2)
+        {
+            QString str=temp.left(len2+1);
+            str=str.remove(0,1);
+            qDebug()<<temp.size();
+            binfile=temp.remove(0,len2+3);
+            qDebug()<<binfile.size();
+            len=binfile.size()/16;
+            if((binfile.size()%16)!=0)
+                len++;
+            ui->label->setText(QString::number(binfile.size(),10)+" Byte"+" Len="+QString::number(len,10)+"\r\n"+str);
+            flag_file_valid=true;
+        }
+        else
+        {
+            flag_file_valid=false;
+            Msg.warning(nullptr,"اخطار","فایل نا معتبر است",QMessageBox::Ok);
+        }
     }
     else
+    {
+        flag_file_valid=false;
         Msg.warning(nullptr,"اخطار","فایلی انتخاب نشده است",QMessageBox::Ok);
+    }
 }
 
 
@@ -216,17 +247,17 @@ void MainWindow::on_btn_port_clicked()
             ui->combo_port->setEnabled (false);
             ui->btn_port->setText("Disconnect");
             ui->btn_open->setEnabled(true);
-            ui->btn_send->setEnabled(true);
-            ui->btn_send_2->setEnabled(true);
-            ui->btn_send_3->setEnabled(true);
+            ui->btn_program->setEnabled(true);
+            ui->btn_app->setEnabled(true);
+            ui->btn_boot->setEnabled(true);
         }
         else if(!serial->open(QIODevice::ReadWrite))
         {
             ui->combo_port->setEnabled (true);
             ui->btn_open->setEnabled(false);
-            ui->btn_send->setEnabled(false);
-            ui->btn_send_2->setEnabled(false);
-            ui->btn_send_3->setEnabled(false);
+            ui->btn_program->setEnabled(false);
+            ui->btn_app->setEnabled(false);
+            ui->btn_boot->setEnabled(false);
             ui->btn_port->setText("Connect");
             Msg.setText("This serial port is used by another device");
             Msg.exec();
@@ -237,9 +268,9 @@ void MainWindow::on_btn_port_clicked()
         serial->close();
         ui->combo_port->setEnabled (true);
         ui->btn_open->setEnabled(false);
-        ui->btn_send->setEnabled(false);
-        ui->btn_send_2->setEnabled(false);
-        ui->btn_send_3->setEnabled(false);
+        ui->btn_program->setEnabled(false);
+        ui->btn_app->setEnabled(false);
+        ui->btn_boot->setEnabled(false);
         ui->btn_port->setText("Connect");
     }
 }
@@ -267,22 +298,28 @@ void MainWindow::sendLength(quint8 cmd)
     ba[6] = 0x0;
     ba[7] = 0x0;
     serial->write(ba, ba.length());
-    qDebug()<<__LINE__<<hex<<cmd;
+    // qDebug()<<__LINE__<<hex<<cmd;
 }
 
-void MainWindow::on_btn_send_clicked()
+void MainWindow::on_btn_program_clicked()
 {
-    index=0;
-    ui->progressBar->setValue(0);
-    ui->progressBar->setVisible(true);
-    flag_write=true;
-    time->start(20);
-    ui->label_2->setText("Please Reset Micro");
+    if(flag_file_valid)
+    {
+        // flag_file_valid=false;
+        index=0;
+        ui->progressBar->setValue(0);
+        ui->progressBar->setVisible(true);
+        flag_write=true;
+        time->start(20);
+        ui->label_2->setText("Please Reset Micro");
+    }
+    else
+        Msg.warning(nullptr,"اخطار","فایلی انتخاب نشده است",QMessageBox::Ok);
 }
 
 
 
-void MainWindow::on_btn_send_2_clicked()
+void MainWindow::on_btn_app_clicked()
 {
     sendLength(0x17);
 }
@@ -291,25 +328,86 @@ void MainWindow::on_btn_send_2_clicked()
 
 
 
-void MainWindow::on_btn_send_3_clicked()
+void MainWindow::on_btn_boot_clicked()
 {
-    sendLength(0x19);
+    QByteArray ba;
+    ba.resize(7);
+    ba[0] = 0xc1;
+    ba[1] = 0xb7;
+    ba[2] = 'P';
+    ba[3] = 0x55;
+    ba[4] = 0;
+    ba[5] = 0;
+    ba[6] = 0;
+    serial->write(ba, 7);
+    serial->write(ba, 7);
+    qDebug()<<__LINE__<<ba.toHex(' ');
 }
 
 
-void MainWindow::on_btn_send_4_clicked()
+void MainWindow::on_btn_convert_clicked()
 {
-    quint16 sum=0;
-    temp2=infofile.toUtf8();
-    temp2.resize(22);
-    for(int i=0;i<temp2.length();i++)
-        sum+=temp2[i];
-    memcpy(temp2.data()+20,&sum,2);
-    qDebug()<<__LINE__<<sum<<temp2.toHex(' ');
-    binfile.prepend(temp2);
-    out.setFileName("C:/Users/RayanRoshd/Desktop/mohsen/ali.bin");
-    out.open(QIODevice::ReadWrite);
-    out.write(binfile);
-    out.close();
+
+    QString filePath =/*"C:/Users/RayanRoshd/Desktop/mohsen/b.bin";*/ QFileDialog::getOpenFileName(this, "Open Binary File", "", "BIN (*.bin)");
+    if (!filePath.isEmpty())
+    {
+
+        file.setFileName(filePath);
+        file.open(QIODevice::ReadWrite);
+        binfile=file.readAll();
+        file.close();
+        qDebug()<<__LINE__;
+        len=binfile.size()/16;
+        if((binfile.size()%16)!=0)
+            len++;
+        ui->label->setText(QString::number(binfile.size(),10)+" Byte"+" Len="+QString::number(len,10));
+        if(ui->lineEdit->text()!="" && ui->lineEdit_2->text()!="" && ui->lineEdit_3->text()!="")
+        {
+            QByteArray temp2;
+            quint16 crc=0;
+            QString infofile=ui->lineEdit->text()+" "+ui->lineEdit_2->text()+" "+ui->lineEdit_3->text();
+            temp2.append(infofile.length());
+            temp2.append(infofile.toUtf8());
+            crc=CRC16_Modbus(temp2,temp2.length());
+            memcpy(temp2.data()+temp2.length(),&crc,2);
+            temp2.resize(infofile.length()+3);
+            qDebug()<<temp2.toHex(' ');
+            binfile.prepend(temp2);
+            out.setFileName(QFileDialog::getSaveFileName(this,"Save file","","BIN(*.bin)"));
+            out.open(QIODevice::ReadWrite);
+            out.write(binfile);
+            out.close();
+        }
+        else
+            Msg.warning(nullptr,"اخطار","کادرها نباید خالی باشند",QMessageBox::Ok);
+    }
+    else
+        Msg.warning(nullptr,"اخطار","فایلی انتخاب نشده است",QMessageBox::Ok);
 }
+
+
+uint16_t MainWindow::CRC16_Modbus(QByteArray data, quint16 length)
+{
+    uint16_t crc = 0xFFFF;
+    uint8_t i;
+    for (uint16_t j = 0; j < length; j++)
+    {
+        crc ^= (quint16)data[j];
+        for (i = 8; i !=0; i--)
+        {
+            if ((crc & 0x0001)!=0)
+            {
+                crc >>= 1;
+                crc ^= 0x0815;
+            }
+            else
+            {
+                crc >>= 1;
+            }
+        }
+    }
+    return crc;
+}
+
+
 
