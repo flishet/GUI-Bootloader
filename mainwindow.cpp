@@ -204,7 +204,14 @@ void MainWindow::CheckData(unsigned char Data)
 
             if( sum == check_sum )
             {
+                timeout=20;
+                flag_ok=true;
                 AckRecive(data[0]);
+            }
+            else
+            {
+
+                flag_ok=false;
             }
             flag_headers=false;
             counter_data = 0;
@@ -217,6 +224,25 @@ void MainWindow::CheckData(unsigned char Data)
 
 void MainWindow::IntervalTimer(void)
 {
+    static int timesec=0;
+
+    if(++timesec>=30 && !flag_ok)
+    {
+        timesec=0;
+        timeout--;
+        ui->label_2->setText("Please Reset Micro "+QString::number(timeout,10)+" Second");
+        if(timeout==0)
+        {
+            ui->progressBar->setVisible(false);
+            ui->btn_program->setEnabled(true);
+//            ui->btn_app->setEnabled(true);
+//            ui->btn_boot->setEnabled(true);
+            ui->label_2->setText(" ");
+            flag_write=false;
+            time->stop();
+        }
+    }
+
     if(flag_send)
     {
         flag_send=false;
@@ -352,17 +378,27 @@ void MainWindow::on_btn_program_clicked()
     if(flag_file_valid)
     {
         // flag_file_valid=false;
-        if(ui->lineEdit_4->text()!="" || ui->lineEdit_5->text()!="")
+        if((ui->lineEdit_4->text()=="" || ui->lineEdit_5->text()=="")&& ui->rd_lan->isChecked())
         {
-        index=0;
-        ui->progressBar->setValue(0);
-        ui->progressBar->setVisible(true);
-        flag_write=true;
-        time->start(20);
-        ui->label_2->setText("Please Reset Micro");
+            Msg.warning(nullptr,"اخطار","آی پی یا پورت مقصد مشخص نیست",QMessageBox::Ok);
+        }
+        else if(serial->isOpen() || udpSocket->isOpen())
+        {
+            index=0;
+            ui->progressBar->setValue(0);
+            ui->progressBar->setVisible(true);
+            ui->btn_program->setEnabled(false);
+//            ui->btn_app->setEnabled(false);
+//            ui->btn_boot->setEnabled(false);
+            flag_write=true;
+            time->start(20);
+            timeout=20;
+            ui->label_2->setText("Please Reset Micro "+QString::number(timeout,10)+" Second");
         }
         else
-            Msg.warning(nullptr,"اخطار","آی پی یا پورت مقصد مشخص نیست",QMessageBox::Ok);
+        {
+            Msg.warning(nullptr,"اخطار","پورت سریال باز نیست",QMessageBox::Ok);
+        }
     }
     else
         Msg.warning(nullptr,"اخطار","فایلی انتخاب نشده است",QMessageBox::Ok);
@@ -390,15 +426,14 @@ void MainWindow::on_btn_boot_clicked()
     ba[4] = 0;
     ba[5] = 0;
     ba[6] = 0;
+    ba[7] =0;
     if(ui->rd_serial->isChecked()==true)
     {
-        serial->write(ba, 7);
-        serial->write(ba, 7);
+        serial->write(ba, 8);
     }
     else
 
     {
-        udpSocket->writeDatagram(ba, QHostAddress(ui->lineEdit_4->text()), ui->lineEdit_5->text().toInt(nullptr,10));
         udpSocket->writeDatagram(ba, QHostAddress(ui->lineEdit_4->text()), ui->lineEdit_5->text().toInt(nullptr,10));
     }
     qDebug()<<__LINE__<<ba.toHex(' ');
@@ -411,7 +446,6 @@ void MainWindow::on_btn_convert_clicked()
     QString filePath =/*"C:/Users/RayanRoshd/Desktop/mohsen/b.bin";*/ QFileDialog::getOpenFileName(this, "Open Binary File", "", "BIN (*.bin)");
     if (!filePath.isEmpty())
     {
-
         file.setFileName(filePath);
         file.open(QIODevice::ReadWrite);
         binfile=file.readAll();

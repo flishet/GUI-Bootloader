@@ -88,11 +88,12 @@ private:
     quint8 header2 = 0;
     bool flag_headers = false;
     bool flag_write=false;
+    bool flag_ok=false;
     QByteArray data;
     quint16 counter_data;
     bool flag_file_valid=false;
     QUdpSocket *udpSocket;
-
+    quint16 timeout=0;
 
 
 
