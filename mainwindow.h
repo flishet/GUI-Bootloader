@@ -16,6 +16,9 @@
 #include <QThread>
 #include <chrono>
 #include <thread>
+#include <QUdpSocket>
+
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -57,6 +60,14 @@ private slots:
 
     void on_btn_convert_clicked();
 
+    void processPendingDatagrams();
+
+    void on_rd_lan_clicked(bool checked);
+
+    void on_rd_serial_clicked(bool checked);
+
+    void on_btn_listen_clicked();
+
 private:
     Ui::MainWindow *ui;
     QSerialPort *serial;
@@ -80,6 +91,7 @@ private:
     QByteArray data;
     quint16 counter_data;
     bool flag_file_valid=false;
+    QUdpSocket *udpSocket;
 
 
 
