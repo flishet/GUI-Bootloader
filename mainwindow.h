@@ -70,6 +70,8 @@ private slots:
 
     void on_btn_listen_clicked();
 
+    void on_combo_mcu_currentTextChanged(const QString &arg1);
+
 private:
     Ui::MainWindow *ui;
     QSerialPort *serial;
@@ -86,9 +88,12 @@ private:
     quint8 buff_recive[20];
     int count=0;
     quint32 chsum=0;
-
+    quint32 DeviceID=0;
+    quint32 SelectDevice=0;
     quint8 header2 = 0;
+    int timeout2=0;
     bool flag_headers = false;
+    bool flag_timeout=false;
     bool flag_write=false;
     bool flag_ok=false;
     QByteArray data;
@@ -96,6 +101,8 @@ private:
     bool flag_file_valid=false;
     QUdpSocket *udpSocket;
     quint16 timeout=0;
+
+    quint32 val1=0,val2=0;
 
 
 

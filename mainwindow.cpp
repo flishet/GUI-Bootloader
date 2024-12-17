@@ -110,14 +110,17 @@ void MainWindow::SnedData(void)
         temp.clear();
         index++;
         time->stop();
+        flag_timeout=false;
+        // qDebug()<<__LINE__<<"stop timer";
         ui->progressBar->setValue((100/(float)len)*index);
         // Msg.information(nullptr,"information","send ok",QMessageBox::Ok);
         ui->progressBar->setVisible(false);
         ui->btn_program->setEnabled(true);
+        ui->combo_mcu->setEnabled(true);
         ui->btn_app->setEnabled(true);
         ui->btn_boot->setEnabled(true);
         ui->label_2->setText(" ");
-        qDebug()<<__LINE__<<"--------------------end send";
+        // qDebug()<<__LINE__<<"--------------------end send";
     }
     else
     {
@@ -136,6 +139,23 @@ void MainWindow::SnedData(void)
         temp.append(all2byte.byte[1]);
         // qDebug()<<index;
         index++;
+
+        if(index>=binfile.length()/16)
+        {
+            time->stop();
+            flag_timeout=false;
+            qDebug()<<__LINE__<<"stop timer";
+            ui->progressBar->setValue((100/(float)len)*index);
+            // Msg.information(nullptr,"information","send ok",QMessageBox::Ok);
+            ui->progressBar->setVisible(false);
+            ui->btn_program->setEnabled(true);
+            ui->combo_mcu->setEnabled(true);
+            ui->btn_app->setEnabled(true);
+            ui->btn_boot->setEnabled(true);
+            ui->label_2->setText(" ");
+            // qDebug()<<__LINE__<<"--------------------end send2";
+        }
+
         if(ui->rd_serial->isChecked()==true)
         {
             serial->write(temp,temp.length());
@@ -146,9 +166,9 @@ void MainWindow::SnedData(void)
         }
 
         ui->progressBar->setValue((100/(float)len)*index);
+        qDebug()<< __LINE__<< temp.toHex(' ');
 
     }
-    qDebug()<< __LINE__<< temp.toHex(' ');
 }
 
 void MainWindow::AckRecive(QByteArray cmd)
@@ -159,7 +179,8 @@ void MainWindow::AckRecive(QByteArray cmd)
         qDebug()<< __LINE__<< counter_data << data;
         quint16 value = 0;
         memcpy(&value, data.data()+1, 2);
-
+        // flag_timeout=false;
+        timeout2=0;
         if( value + 1 == index )
         {
             flag_headers=false;
@@ -169,17 +190,22 @@ void MainWindow::AckRecive(QByteArray cmd)
         break;
     }
     case 0x18:{
+        // flag_timeout=false;
+        timeout2=0;
         qDebug()<< __LINE__;
         flag_send=true;
         ui->label_2->setText("Programming...");
         ui->progressBar->setValue(0);
         // ui->btn_open->setEnabled(false);
         ui->btn_program->setEnabled(false);
+        ui->combo_mcu->setEnabled(false);
         ui->btn_app->setEnabled(false);
         ui->btn_boot->setEnabled(false);
+        flag_timeout=true;
         break;
     }
     case 0x16:{
+        timeout2=0;
         index=0;
         qDebug()<< __LINE__;
         flag_write=false;
@@ -187,14 +213,48 @@ void MainWindow::AckRecive(QByteArray cmd)
         break;
     }
     case 0x19:{
+        timeout2=0;
         ui->label_2->setText("Erasing...");
         float a=(100.0/15.0*cmd[1]);
-            if(a>=100)a=100;
+        if(a>=100)a=100;
         qDebug()<<__LINE__<<cmd.toHex(' ')<<(float)a;
         ui->progressBar->setValue(a);
-
         break;
     }
+    case 0x20:{
+        // flag_timeout=false;
+        timeout2=0;
+        memcpy(&DeviceID,cmd.data()+1,4);
+        qDebug()<<__LINE__<<hex<<DeviceID;
+        if(DeviceID==SelectDevice)
+        {
+            sendLength(0x16);
+            // ui->progressBar->setValue(0);
+            // ui->progressBar->setVisible(true);
+            // ui->btn_program->setEnabled(false);
+            // ui->label_2->setText("Please Reset Micro "+QString::number(timeout,10)+" Second");
+            qDebug()<<__LINE__;
+            // index=0;
+        }
+        else
+        {
+            flag_write=false;
+            flag_ok=false;
+            time->stop();
+            qDebug()<<__LINE__<<"stop timer";
+            // ui->progressBar->setValue(0);
+            ui->progressBar->setVisible(false);
+            ui->btn_program->setEnabled(true);
+            ui->combo_mcu->setEnabled(true);
+            ui->label_2->setText("");
+            Msg.warning(nullptr,"اخطار","چیپ انتخاب شده اشتباه است",QMessageBox::Ok);
+            //            ui->btn_app->setEnabled(false);
+            //            ui->btn_boot->setEnabled(false);
+            // qDebug()<<__LINE__<<DeviceID;
+        }
+        break;
+    }
+
     }
 }
 
@@ -208,25 +268,27 @@ void MainWindow::CheckData(unsigned char Data)
     {
         flag_headers = true;
         counter_data=0;
-        // qDebug()<<__LINE__;
     }
     else if(flag_headers == true)
     {
         data[counter_data] = Data;
-        if(counter_data == 4)
+        if(counter_data == 6)
         {
-            quint16 sum = (quint8)data[2] + (quint8)data[1];
-            quint16 check_sum = (quint8)data[3] + (quint8)data[4] * 256;
+            quint16 sum = (quint8)data[2] + (quint8)data[1] + (quint8)data[3] + (quint8)data[4];
+            quint16 check_sum = 0;/*(quint8)data[3] + (quint8)data[4] * 256;*/
+            memcpy(&check_sum,data.data()+5,2);
+            // qDebug()<<__LINE__<<data.toHex(' ');
+            // qDebug()<<__LINE__<<hex<<check_sum<<sum;
 
             if( sum == check_sum )
             {
+                //timeout2=0;
                 timeout=20;
                 flag_ok=true;
                 AckRecive(data.data());
             }
             else
             {
-
                 flag_ok=false;
             }
             flag_headers=false;
@@ -242,6 +304,30 @@ void MainWindow::IntervalTimer(void)
 {
     static int timesec=0;
 
+    val2=val1;
+    val1=index;
+    // qDebug()<<__LINE__<<val1<<val2<<flag_timeout;
+    if(val1==val2 && flag_timeout)
+    {
+        if(++timeout2>=5)
+        {
+            flag_timeout=false;
+            time->stop();
+            ui->progressBar->setValue(0);
+            ui->progressBar->setVisible(false);
+            ui->btn_program->setEnabled(true);
+            ui->combo_mcu->setEnabled(true);
+            ui->label_2->setText("");
+            //            ui->btn_app->setEnabled(false);
+            //            ui->btn_boot->setEnabled(false);
+            // flag_write=true;
+            // time->start(20);
+            // flag_ok=false;
+            // timeout=20;
+            Msg.warning(nullptr,"اخطار","ارتباط قطع شد",QMessageBox::Ok);
+        }
+    }
+
     if(++timesec>=30 && !flag_ok)
     {
         timesec=0;
@@ -251,6 +337,7 @@ void MainWindow::IntervalTimer(void)
         {
             ui->progressBar->setVisible(false);
             ui->btn_program->setEnabled(true);
+            ui->combo_mcu->setEnabled(true);
             //            ui->btn_app->setEnabled(true);
             //            ui->btn_boot->setEnabled(true);
             ui->label_2->setText(" ");
@@ -267,7 +354,7 @@ void MainWindow::IntervalTimer(void)
 
     if(flag_write)
     {
-        sendLength(0x16);
+        sendLength(0x20);
     }
 }
 
@@ -305,7 +392,7 @@ void MainWindow::on_btn_open_clicked()
             len=binfile.size()/16;
             if((binfile.size()%16)!=0)
                 len++;
-            ui->label->setText(QString::number(binfile.size()/1024,10)+"KByte"+" Len="+QString::number(len,10)+"\r\n"+str);
+            ui->label->setText(QString::number(binfile.size()/*/1024*/,10)+"KByte"+" Len="+QString::number(len,10)+"\r\n"+str);
             flag_file_valid=true;
         }
         else
@@ -404,10 +491,12 @@ void MainWindow::on_btn_program_clicked()
             ui->progressBar->setValue(0);
             ui->progressBar->setVisible(true);
             ui->btn_program->setEnabled(false);
+            ui->combo_mcu->setEnabled(false);
             //            ui->btn_app->setEnabled(false);
             //            ui->btn_boot->setEnabled(false);
             flag_write=true;
             time->start(20);
+            flag_ok=false;
             timeout=20;
             ui->label_2->setText("Please Reset Micro "+QString::number(timeout,10)+" Second");
         }
@@ -442,7 +531,7 @@ void MainWindow::on_btn_boot_clicked()
     ba[4] = 0;
     ba[5] = 0;
     ba[6] = 0;
-    ba[7] =0;
+    ba[7] = 0;
     if(ui->rd_serial->isChecked()==true)
     {
         serial->write(ba, 8);
@@ -568,5 +657,18 @@ void MainWindow::on_btn_listen_clicked()
     }
     else
         Msg.warning(nullptr,"اخطار","پورت دریافت مشخص نیست",QMessageBox::Ok);
+}
+
+
+void MainWindow::on_combo_mcu_currentTextChanged(const QString &arg1)
+{
+    if(arg1=="LPC1768")
+        SelectDevice=0x26013F37;
+    else if(arg1=="LPC1788")
+        SelectDevice=0x281D3F47;
+    else if(arg1=="STM32H743")
+        SelectDevice=0x450;
+
+    qDebug()<<__LINE__<<hex<<SelectDevice;
 }
 
