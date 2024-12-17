@@ -20,6 +20,8 @@
 
 
 
+
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -98,6 +100,6 @@ private:
 
 
     void sendLength(quint8 cmd);
-    void AckRecive(quint8 cmd);
+    void AckRecive(QByteArray cmd);
 };
 #endif // MAINWINDOW_H
