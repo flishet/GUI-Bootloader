@@ -142,9 +142,9 @@ void MainWindow::SnedData(void)
 
         if(index>=binfile.length()/16)
         {
-            time->stop();
+            // time->stop();
             flag_timeout=false;
-            qDebug()<<__LINE__<<"stop timer";
+            // qDebug()<<__LINE__<<"stop timer";
             ui->progressBar->setValue((100/(float)len)*index);
             // Msg.information(nullptr,"information","send ok",QMessageBox::Ok);
             ui->progressBar->setVisible(false);
@@ -166,7 +166,7 @@ void MainWindow::SnedData(void)
         }
 
         ui->progressBar->setValue((100/(float)len)*index);
-        qDebug()<< __LINE__<< temp.toHex(' ');
+        // qDebug()<< __LINE__<< temp.toHex(' ');
 
     }
 }
@@ -226,6 +226,11 @@ void MainWindow::AckRecive(QByteArray cmd)
         timeout2=0;
         memcpy(&DeviceID,cmd.data()+1,4);
         qDebug()<<__LINE__<<hex<<DeviceID;
+        if(SelectDevice==0x450)
+        {
+            DeviceID&=0xffff;
+        }
+
         if(DeviceID==SelectDevice)
         {
             sendLength(0x16);
@@ -277,7 +282,7 @@ void MainWindow::CheckData(unsigned char Data)
             quint16 sum = (quint8)data[2] + (quint8)data[1] + (quint8)data[3] + (quint8)data[4];
             quint16 check_sum = 0;/*(quint8)data[3] + (quint8)data[4] * 256;*/
             memcpy(&check_sum,data.data()+5,2);
-            // qDebug()<<__LINE__<<data.toHex(' ');
+            qDebug()<<__LINE__<<data.toHex(' ');
             // qDebug()<<__LINE__<<hex<<check_sum<<sum;
 
             if( sum == check_sum )
@@ -362,6 +367,7 @@ void MainWindow::ReadyReads(void)
 {
     QByteArray data;
     data=serial->readAll();
+    qDebug()<<__LINE__<<data.toHex(' ');
     for(int i=0;i<data.length();i++)
         CheckData(data[i]);
 }
@@ -386,13 +392,14 @@ void MainWindow::on_btn_open_clicked()
         {
             QString str=temp.left(len2+1);
             str=str.remove(0,1);
-            qDebug()<<temp.size();
             binfile=temp.remove(0,len2+3);
             qDebug()<<binfile.size();
             len=binfile.size()/16;
+            // qDebug()<<len;
+
             if((binfile.size()%16)!=0)
                 len++;
-            ui->label->setText(QString::number(binfile.size()/*/1024*/,10)+"KByte"+" Len="+QString::number(len,10)+"\r\n"+str);
+            ui->label->setText(QString::number(binfile.size()/1024,10)+"KByte"+" Len="+QString::number(len,10)+"\r\n"+str);
             flag_file_valid=true;
         }
         else
