@@ -17,6 +17,11 @@ MainWindow::MainWindow(QWidget *parent)
     ui->lineEdit_5->setEnabled(false);
     ui->lineEdit_6->setEnabled(false);
 
+    ui->combo_mcu->addItem("LPC1788");
+    ui->combo_mcu->addItem("LPC1768");
+    ui->combo_mcu->addItem("STM32H743");
+
+
     connect(serial, SIGNAL(readyRead()), this, SLOT(ReadyReads()));
     connect(time,SIGNAL(timeout()),this,SLOT(IntervalTimer()));
     connect(udpSocket, &QUdpSocket::readyRead, this, &MainWindow::processPendingDatagrams);
@@ -112,6 +117,7 @@ void MainWindow::SnedData(void)
         ui->btn_app->setEnabled(true);
         ui->btn_boot->setEnabled(true);
         ui->label_2->setText(" ");
+        qDebug()<<__LINE__<<"--------------------end send";
     }
     else
     {
@@ -145,9 +151,9 @@ void MainWindow::SnedData(void)
     qDebug()<< __LINE__<< temp.toHex(' ');
 }
 
-void MainWindow::AckRecive(quint8 cmd)
+void MainWindow::AckRecive(QByteArray cmd)
 {
-    switch (cmd)
+    switch (cmd[0])
     {
     case 0x15:{
         qDebug()<< __LINE__<< counter_data << data;
@@ -166,6 +172,7 @@ void MainWindow::AckRecive(quint8 cmd)
         qDebug()<< __LINE__;
         flag_send=true;
         ui->label_2->setText("Programming...");
+        ui->progressBar->setValue(0);
         // ui->btn_open->setEnabled(false);
         ui->btn_program->setEnabled(false);
         ui->btn_app->setEnabled(false);
@@ -177,6 +184,15 @@ void MainWindow::AckRecive(quint8 cmd)
         qDebug()<< __LINE__;
         flag_write=false;
         sendLength(0x18);
+        break;
+    }
+    case 0x19:{
+        ui->label_2->setText("Erasing...");
+        float a=(100.0/15.0*cmd[1]);
+            if(a>=100)a=100;
+        qDebug()<<__LINE__<<cmd.toHex(' ')<<(float)a;
+        ui->progressBar->setValue(a);
+
         break;
     }
     }
@@ -206,7 +222,7 @@ void MainWindow::CheckData(unsigned char Data)
             {
                 timeout=20;
                 flag_ok=true;
-                AckRecive(data[0]);
+                AckRecive(data.data());
             }
             else
             {
@@ -235,8 +251,8 @@ void MainWindow::IntervalTimer(void)
         {
             ui->progressBar->setVisible(false);
             ui->btn_program->setEnabled(true);
-//            ui->btn_app->setEnabled(true);
-//            ui->btn_boot->setEnabled(true);
+            //            ui->btn_app->setEnabled(true);
+            //            ui->btn_boot->setEnabled(true);
             ui->label_2->setText(" ");
             flag_write=false;
             time->stop();
@@ -388,8 +404,8 @@ void MainWindow::on_btn_program_clicked()
             ui->progressBar->setValue(0);
             ui->progressBar->setVisible(true);
             ui->btn_program->setEnabled(false);
-//            ui->btn_app->setEnabled(false);
-//            ui->btn_boot->setEnabled(false);
+            //            ui->btn_app->setEnabled(false);
+            //            ui->btn_boot->setEnabled(false);
             flag_write=true;
             time->start(20);
             timeout=20;
