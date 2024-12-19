@@ -99,11 +99,13 @@ private:
     QByteArray data;
     quint16 counter_data;
     bool flag_file_valid=false;
+    bool timeout_erase=false;
+    quint8 index_erase=0;
     QUdpSocket *udpSocket;
     quint16 timeout=0;
 
     quint32 val1=0,val2=0;
-
+    quint8 val3=0,val4=0;
 
 
     void sendLength(quint8 cmd);

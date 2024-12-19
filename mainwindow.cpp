@@ -191,6 +191,7 @@ void MainWindow::AckRecive(QByteArray cmd)
     }
     case 0x18:{
         // flag_timeout=false;
+        timeout_erase=false;
         timeout2=0;
         qDebug()<< __LINE__;
         flag_send=true;
@@ -214,7 +215,9 @@ void MainWindow::AckRecive(QByteArray cmd)
     }
     case 0x19:{
         timeout2=0;
+        timeout_erase=true;
         ui->label_2->setText("Erasing...");
+        index_erase=cmd[1];
         float a=(100.0/15.0*cmd[1]);
         if(a>=100)a=100;
         qDebug()<<__LINE__<<cmd.toHex(' ')<<(float)a;
@@ -307,16 +310,20 @@ void MainWindow::CheckData(unsigned char Data)
 
 void MainWindow::IntervalTimer(void)
 {
-    static int timesec=0;
+    static int timesec=0,timErase=0;
 
     val2=val1;
     val1=index;
+
+
+
     // qDebug()<<__LINE__<<val1<<val2<<flag_timeout;
-    if(val1==val2 && flag_timeout)
+    if((val1==val2 && flag_timeout))
     {
         if(++timeout2>=5)
         {
             flag_timeout=false;
+            timeout_erase=false;
             time->stop();
             ui->progressBar->setValue(0);
             ui->progressBar->setVisible(false);
@@ -330,6 +337,35 @@ void MainWindow::IntervalTimer(void)
             // flag_ok=false;
             // timeout=20;
             Msg.warning(nullptr,"اخطار","ارتباط قطع شد",QMessageBox::Ok);
+        }
+    }
+
+
+    if(timeout_erase)
+    {
+        if(++timErase>=50)
+        {
+            timErase=0;
+            qDebug()<<__LINE__<<"ali";
+            val4=val3;
+            val3=index_erase;
+            if(val3==val4)
+            {
+                timeout_erase=false;
+                time->stop();
+                ui->progressBar->setValue(0);
+                ui->progressBar->setVisible(false);
+                ui->btn_program->setEnabled(true);
+                ui->combo_mcu->setEnabled(true);
+                ui->label_2->setText("");
+                //            ui->btn_app->setEnabled(false);
+                //            ui->btn_boot->setEnabled(false);
+                // flag_write=true;
+                // time->start(20);
+                // flag_ok=false;
+                // timeout=20;
+                Msg.warning(nullptr,"اخطار","ارتباط قطع شد",QMessageBox::Ok);
+            }
         }
     }
 
