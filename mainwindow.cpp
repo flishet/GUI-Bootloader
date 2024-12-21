@@ -21,7 +21,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->combo_mcu->addItem("LPC1768");
     ui->combo_mcu->addItem("STM32H743");
 
+    ui->tabWidget->setTabEnabled(1,false);
 
+    connect(shortcut, &QShortcut::activated, this, &MainWindow::toggleWidgets);
     connect(serial, SIGNAL(readyRead()), this, SLOT(ReadyReads()));
     connect(time,SIGNAL(timeout()),this,SLOT(IntervalTimer()));
     connect(udpSocket, &QUdpSocket::readyRead, this, &MainWindow::processPendingDatagrams);
@@ -713,5 +715,11 @@ void MainWindow::on_combo_mcu_currentTextChanged(const QString &arg1)
         SelectDevice=0x450;
 
     qDebug()<<__LINE__<<hex<<SelectDevice;
+}
+
+void MainWindow::toggleWidgets()
+{
+    bool en=!ui->tabWidget->isTabEnabled(1);
+    ui->tabWidget->setTabEnabled(1,en);
 }
 

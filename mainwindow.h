@@ -17,7 +17,8 @@
 #include <chrono>
 #include <thread>
 #include <QUdpSocket>
-
+#include <QShortcut>
+#include <QKeySequence>
 
 
 
@@ -34,6 +35,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    QShortcut *shortcut = new QShortcut(QKeySequence("Ctrl+k"), this);
 
 
 private slots:
@@ -71,6 +73,8 @@ private slots:
     void on_btn_listen_clicked();
 
     void on_combo_mcu_currentTextChanged(const QString &arg1);
+
+    void toggleWidgets(void);
 
 private:
     Ui::MainWindow *ui;
