@@ -21,13 +21,19 @@ MainWindow::MainWindow(QWidget *parent)
     ui->combo_mcu->addItem("LPC1768");
     ui->combo_mcu->addItem("STM32H743");
 
+    ui->combo_baud->addItem("9600");
+    ui->combo_baud->addItem("115200");
+    ui->combo_baud->addItem("230400");
+    ui->combo_baud->addItem("460800");
+    ui->combo_baud->addItem("921600");
+
     ui->tabWidget->setTabEnabled(1,false);
 
     connect(shortcut, &QShortcut::activated, this, &MainWindow::toggleWidgets);
     connect(serial, SIGNAL(readyRead()), this, SLOT(ReadyReads()));
     connect(time,SIGNAL(timeout()),this,SLOT(IntervalTimer()));
     connect(udpSocket, &QUdpSocket::readyRead, this, &MainWindow::processPendingDatagrams);
-    serial->setBaudRate(QSerialPort::Baud115200);
+//    serial->setBaudRate(460800);
     serial->setDataBits(QSerialPort::Data8);
     serial->setParity(QSerialPort::NoParity);
     serial->setStopBits(QSerialPort::OneStop);
@@ -287,8 +293,6 @@ void MainWindow::CheckData(unsigned char Data)
             quint16 sum = (quint8)data[2] + (quint8)data[1] + (quint8)data[3] + (quint8)data[4];
             quint16 check_sum = 0;/*(quint8)data[3] + (quint8)data[4] * 256;*/
             memcpy(&check_sum,data.data()+5,2);
-            qDebug()<<__LINE__<<data.toHex(' ');
-            // qDebug()<<__LINE__<<hex<<check_sum<<sum;
 
             if( sum == check_sum )
             {
@@ -348,7 +352,6 @@ void MainWindow::IntervalTimer(void)
         if(++timErase>=50)
         {
             timErase=0;
-            qDebug()<<__LINE__<<"ali";
             val4=val3;
             val3=index_erase;
             if(val3==val4)
@@ -405,7 +408,7 @@ void MainWindow::ReadyReads(void)
 {
     QByteArray data;
     data=serial->readAll();
-    qDebug()<<__LINE__<<data.toHex(' ');
+//    qDebug()<<__LINE__<<data.toHex(' ');
     for(int i=0;i<data.length();i++)
         CheckData(data[i]);
 }
@@ -456,6 +459,8 @@ void MainWindow::on_btn_open_clicked()
 
 void MainWindow::on_btn_port_clicked()
 {
+    serial->setBaudRate(ui->combo_baud->currentText().toInt(nullptr,10));
+    qDebug()<<__LINE__<<serial->baudRate();
     serial->setPortName(ui->combo_port->currentText()); //ListStr[0]
     if(serial->isOpen() == false)
     {
