@@ -111,7 +111,7 @@ private:
     quint32 val1=0,val2=0;
     quint8 val3=0,val4=0;
 
-
+bool flag_tms=false;
     void sendLength(quint8 cmd);
     void AckRecive(QByteArray cmd);
 };

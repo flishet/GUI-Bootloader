@@ -20,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->combo_mcu->addItem("LPC1788");
     ui->combo_mcu->addItem("LPC1768");
     ui->combo_mcu->addItem("STM32H743");
+    ui->combo_mcu->addItem("TMS320F28377S");
 
     ui->combo_baud->addItem("9600");
     ui->combo_baud->addItem("115200");
@@ -105,7 +106,6 @@ void MainWindow::SnedData(void)
         all2byte.all=sum;
         temp.append(all2byte.byte[0]);
         temp.append(all2byte.byte[1]);
-        // qDebug()<<index;
         if(ui->rd_serial->isChecked()==true)
         {
             serial->write(temp,temp.length());
@@ -128,6 +128,7 @@ void MainWindow::SnedData(void)
         ui->btn_app->setEnabled(true);
         ui->btn_boot->setEnabled(true);
         ui->label_2->setText(" ");
+        sendLength(0x17);
         // qDebug()<<__LINE__<<"--------------------end send";
     }
     else
@@ -161,8 +162,10 @@ void MainWindow::SnedData(void)
             ui->btn_app->setEnabled(true);
             ui->btn_boot->setEnabled(true);
             ui->label_2->setText(" ");
+            sendLength(0x17);
             // qDebug()<<__LINE__<<"--------------------end send2";
         }
+
 
         if(ui->rd_serial->isChecked()==true)
         {
@@ -174,7 +177,7 @@ void MainWindow::SnedData(void)
         }
 
         ui->progressBar->setValue((100/(float)len)*index);
-        // qDebug()<< __LINE__<< temp.toHex(' ');
+         qDebug()<< __LINE__<< temp.toHex(' ');
 
     }
 }
@@ -236,7 +239,8 @@ void MainWindow::AckRecive(QByteArray cmd)
         // flag_timeout=false;
         timeout2=0;
         memcpy(&DeviceID,cmd.data()+1,4);
-        qDebug()<<__LINE__<<hex<<DeviceID;
+        qDebug()<<__LINE__<<cmd.toHex(' ');
+        qDebug()<<__LINE__<<hex<<DeviceID<<SelectDevice;
         if(SelectDevice==0x450)
         {
             DeviceID&=0xffff;
@@ -299,7 +303,8 @@ void MainWindow::CheckData(unsigned char Data)
                 //timeout2=0;
                 timeout=20;
                 flag_ok=true;
-                AckRecive(data.data());
+                qDebug()<<__LINE__<<hex<<data.data();
+                AckRecive(data);
             }
             else
             {
@@ -408,7 +413,7 @@ void MainWindow::ReadyReads(void)
 {
     QByteArray data;
     data=serial->readAll();
-//    qDebug()<<__LINE__<<data.toHex(' ');
+    qDebug()<<__LINE__<<data.toHex(' ');
     for(int i=0;i<data.length();i++)
         CheckData(data[i]);
 }
@@ -718,6 +723,8 @@ void MainWindow::on_combo_mcu_currentTextChanged(const QString &arg1)
         SelectDevice=0x281D3F47;
     else if(arg1=="STM32H743")
         SelectDevice=0x450;
+    else if(arg1=="TMS320F28377S")
+        SelectDevice=0x00ff0400;
 
     qDebug()<<__LINE__<<hex<<SelectDevice;
 }
@@ -727,4 +734,5 @@ void MainWindow::toggleWidgets()
     bool en=!ui->tabWidget->isTabEnabled(1);
     ui->tabWidget->setTabEnabled(1,en);
 }
+
 
