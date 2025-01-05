@@ -93,15 +93,26 @@ void MainWindow::SnedData(void)
     if(index>=binfile.length()/16)
     {
         all2byte.all=index;
-        temp.append(all2byte.byte[0]);
-        temp.append(all2byte.byte[1]);
-        temp.append(binfile.length()%16);
+        if(SelectDevice==0x00ff0400)
+        {
+            temp.append(2+binfile.length()%16);
+            temp.append(all2byte.byte[0]);
+            temp.append(all2byte.byte[1]);
+            sum=all2byte.byte[1]+all2byte.byte[0];
+        }
+        else
+        {
+            temp.append(all2byte.byte[0]);
+            temp.append(all2byte.byte[1]);
+            temp.append(binfile.length()%16);
+        }
 
         for(int i=0;i<binfile.length()%16;i++)
         {
             sum+=(quint8)binfile.at(index*16+i);
             temp.append(binfile.at(index*16+i));
         }
+
         all2byte.all=sum;
         temp.append(all2byte.byte[0]);
         temp.append(all2byte.byte[1]);
@@ -133,9 +144,19 @@ void MainWindow::SnedData(void)
     else
     {
         all2byte.all=index;
-        temp.append(all2byte.byte[0]);
-        temp.append(all2byte.byte[1]);
-        temp.append(16);
+        if(SelectDevice==0x00ff0400)
+        {
+            temp.append(18);
+            temp.append(all2byte.byte[0]);
+            temp.append(all2byte.byte[1]);
+            sum=all2byte.byte[0]+all2byte.byte[1];
+        }
+        else
+        {
+            temp.append(all2byte.byte[0]);
+            temp.append(all2byte.byte[1]);
+            temp.append(16);
+        }
 
         for(int i=0;i<16;i++)
         {
@@ -183,18 +204,24 @@ void MainWindow::SnedData(void)
 
 void MainWindow::AckRecive(QByteArray cmd)
 {
-    int data_index=0;
+    int data_index=0,indx=0;
     if(SelectDevice==0x00ff0400)
+    {
+        indx=2;
         data_index=1;
+    }
     else
+    {
+        indx=0;
         data_index=0;
+    }
 
     switch (cmd[data_index])
     {
     case 0x15:{
         qDebug()<< __LINE__<< counter_data << data.toHex(' ');
         quint16 value = 0;
-        memcpy(&value, data.data()+1+data_index, 2);
+        memcpy(&value, data.data()+1+indx, 2);
         qDebug()<< __LINE__<< ", value:" << (quint16)value << ", index:" << index;
         // flag_timeout=false;
         timeout2=0;
@@ -233,8 +260,8 @@ void MainWindow::AckRecive(QByteArray cmd)
         timeout2=0;
         timeout_erase=true;
         ui->label_2->setText("Erasing...");
-        index_erase=cmd[1+data_index];
-        float a=(100.0/15.0*cmd[1+data_index]);
+        index_erase=cmd[1+indx];
+        float a=(100.0/15.0*cmd[1+indx]);
         if(a>=100)a=100;
         qDebug()<<__LINE__<<cmd.toHex(' ')<<(float)a;
         ui->progressBar->setValue(a);
@@ -243,7 +270,7 @@ void MainWindow::AckRecive(QByteArray cmd)
     case 0x20:{
         // flag_timeout=false;
         timeout2=0;
-        memcpy(&DeviceID,cmd.data()+1+data_index,4);
+        memcpy(&DeviceID,cmd.data()+1+indx,4);
         qDebug()<<__LINE__<<cmd.toHex(' ');
         qDebug()<<__LINE__<<hex<<DeviceID<<SelectDevice;
         if(SelectDevice==0x450)
@@ -300,7 +327,7 @@ void MainWindow::CheckData(unsigned char Data)
     {
         data[counter_data] = Data;
         if(SelectDevice==0x00ff0400)
-            len_recive=7;
+            len_recive=9;
         else
             len_recive=6;
 
@@ -308,9 +335,9 @@ void MainWindow::CheckData(unsigned char Data)
         {
             if(SelectDevice==0x00ff0400)
             {
-                sum = (quint8)data[5] + (quint8)data[2] + (quint8)data[3] + (quint8)data[4];
+                sum = (quint8)data[5] + (quint8)data[6] + (quint8)data[3] + (quint8)data[4];
                 check_sum = 0;/*(quint8)data[3] + (quint8)data[4] * 256;*/
-                memcpy(&check_sum,data.data()+6,2);
+                memcpy(&check_sum,data.data()+7,2);
             }
             else
             {
@@ -433,7 +460,7 @@ void MainWindow::ReadyReads(void)
 {
     QByteArray data;
     data=serial->readAll();
-//    qDebug()<<__LINE__<<data.toHex(' ');
+    //    qDebug()<<__LINE__<<data.toHex(' ');
     for(int i=0;i<data.length();i++)
         CheckData(data[i]);
 }
@@ -542,21 +569,22 @@ void MainWindow::on_pushButton_2_clicked()
 void MainWindow::sendLength(quint8 cmd)
 {
     QByteArray ba;
+    uint16_t sum=0;
     if(SelectDevice==0x00ff0400)
     {
-        //        ba.resize(8);
+        ba.resize(9);
         ba[0] = 0xc1;
         ba[1] = 0xb7;
         ba[2] = 'P';
         ba[3] = cmd;
-        memcpy(ba.data() + 4, &len, 2);
-        ba[6] = 0x0;
-        ba[7] = 0x0;
-        ba[8] = 0x0;
+        ba[4] = 0x2;
+        memcpy(ba.data() + 5, &len, 2);
+        sum=(quint8)ba[5]+(quint8)ba[6];
+        memcpy(ba.data() + 7, &sum, 2);
     }
     else
     {
-        //        ba.resize(9);
+        ba.resize(8);
         ba[0] = 0xc1;
         ba[1] = 0xb7;
         ba[2] = cmd;
@@ -781,8 +809,14 @@ void MainWindow::toggleWidgets()
 
 void MainWindow::on_btn_port_2_clicked()
 {
-//    sendLength(0x55);
-//    index=0;
-   SnedData();
+    //    sendLength(0x55);
+    //        index=0;
+    SnedData();
+}
+
+
+void MainWindow::on_btn_port_3_clicked()
+{
+    index--;
 }
 
