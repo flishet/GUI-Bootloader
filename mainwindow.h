@@ -76,6 +76,8 @@ private slots:
 
     void toggleWidgets(void);
 
+    void on_btn_port_2_clicked();
+
 private:
     Ui::MainWindow *ui;
     QSerialPort *serial;
@@ -110,6 +112,10 @@ private:
 
     quint32 val1=0,val2=0;
     quint8 val3=0,val4=0;
+    union {
+        uint8_t byte[2];
+        uint16_t all;
+    }all2byte;
 
 bool flag_tms=false;
     void sendLength(quint8 cmd);

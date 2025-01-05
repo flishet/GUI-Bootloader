@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(serial, SIGNAL(readyRead()), this, SLOT(ReadyReads()));
     connect(time,SIGNAL(timeout()),this,SLOT(IntervalTimer()));
     connect(udpSocket, &QUdpSocket::readyRead, this, &MainWindow::processPendingDatagrams);
-//    serial->setBaudRate(460800);
+    //    serial->setBaudRate(460800);
     serial->setDataBits(QSerialPort::Data8);
     serial->setParity(QSerialPort::NoParity);
     serial->setStopBits(QSerialPort::OneStop);
@@ -81,14 +81,13 @@ void MainWindow::SnedData(void)
 {
     QByteArray temp;
     quint16 sum=0;
-    union {
-        uint8_t byte[2];
-        uint16_t all;
-    }all2byte;
-
 
     temp.append(0xc1);
     temp.append(0xb7);
+    if(SelectDevice==0x00ff0400)
+    {
+        temp.append('P');
+    }
     temp.append(0x15);
 
     if(index>=binfile.length()/16)
@@ -177,26 +176,32 @@ void MainWindow::SnedData(void)
         }
 
         ui->progressBar->setValue((100/(float)len)*index);
-         qDebug()<< __LINE__<< temp.toHex(' ');
+        qDebug()<< __LINE__<< temp.toHex(' ');
 
     }
 }
 
 void MainWindow::AckRecive(QByteArray cmd)
 {
-    switch (cmd[0])
+    int data_index=0;
+    if(SelectDevice==0x00ff0400)
+        data_index=1;
+    else
+        data_index=0;
+
+    switch (cmd[data_index])
     {
     case 0x15:{
-        qDebug()<< __LINE__<< counter_data << data;
+        qDebug()<< __LINE__<< counter_data << data.toHex(' ');
         quint16 value = 0;
-        memcpy(&value, data.data()+1, 2);
+        memcpy(&value, data.data()+1+data_index, 2);
+        qDebug()<< __LINE__<< ", value:" << (quint16)value << ", index:" << index;
         // flag_timeout=false;
         timeout2=0;
         if( value + 1 == index )
         {
             flag_headers=false;
             flag_send=true;
-            qDebug()<< __LINE__<< ", value:" << (quint16)value << ", index:" << index;
         }
         break;
     }
@@ -228,8 +233,8 @@ void MainWindow::AckRecive(QByteArray cmd)
         timeout2=0;
         timeout_erase=true;
         ui->label_2->setText("Erasing...");
-        index_erase=cmd[1];
-        float a=(100.0/15.0*cmd[1]);
+        index_erase=cmd[1+data_index];
+        float a=(100.0/15.0*cmd[1+data_index]);
         if(a>=100)a=100;
         qDebug()<<__LINE__<<cmd.toHex(' ')<<(float)a;
         ui->progressBar->setValue(a);
@@ -238,7 +243,7 @@ void MainWindow::AckRecive(QByteArray cmd)
     case 0x20:{
         // flag_timeout=false;
         timeout2=0;
-        memcpy(&DeviceID,cmd.data()+1,4);
+        memcpy(&DeviceID,cmd.data()+1+data_index,4);
         qDebug()<<__LINE__<<cmd.toHex(' ');
         qDebug()<<__LINE__<<hex<<DeviceID<<SelectDevice;
         if(SelectDevice==0x450)
@@ -281,7 +286,9 @@ void MainWindow::AckRecive(QByteArray cmd)
 void MainWindow::CheckData(unsigned char Data)
 {
     // qDebug()<< Data.length()<< ++packet_count;
-
+    quint8 len_recive=0;
+    quint16 sum=0;
+    quint16 check_sum=0;
     header2 = header1;
     header1 =(quint8) Data;
     if (header2 == 0xC1 && header1 == 0xB7 && flag_headers==false)
@@ -292,18 +299,31 @@ void MainWindow::CheckData(unsigned char Data)
     else if(flag_headers == true)
     {
         data[counter_data] = Data;
-        if(counter_data == 6)
-        {
-            quint16 sum = (quint8)data[2] + (quint8)data[1] + (quint8)data[3] + (quint8)data[4];
-            quint16 check_sum = 0;/*(quint8)data[3] + (quint8)data[4] * 256;*/
-            memcpy(&check_sum,data.data()+5,2);
+        if(SelectDevice==0x00ff0400)
+            len_recive=7;
+        else
+            len_recive=6;
 
+        if(counter_data == len_recive)
+        {
+            if(SelectDevice==0x00ff0400)
+            {
+                sum = (quint8)data[5] + (quint8)data[2] + (quint8)data[3] + (quint8)data[4];
+                check_sum = 0;/*(quint8)data[3] + (quint8)data[4] * 256;*/
+                memcpy(&check_sum,data.data()+6,2);
+            }
+            else
+            {
+                sum = (quint8)data[1] + (quint8)data[2] + (quint8)data[3] + (quint8)data[4];
+                check_sum = 0;/*(quint8)data[3] + (quint8)data[4] * 256;*/
+                memcpy(&check_sum,data.data()+5,2);
+            }
             if( sum == check_sum )
             {
                 //timeout2=0;
                 timeout=20;
                 flag_ok=true;
-                qDebug()<<__LINE__<<hex<<data.data();
+                qDebug()<<__LINE__<<hex<<data.toHex(' ');
                 AckRecive(data);
             }
             else
@@ -413,7 +433,7 @@ void MainWindow::ReadyReads(void)
 {
     QByteArray data;
     data=serial->readAll();
-    qDebug()<<__LINE__<<data.toHex(' ');
+//    qDebug()<<__LINE__<<data.toHex(' ');
     for(int i=0;i<data.length();i++)
         CheckData(data[i]);
 }
@@ -473,6 +493,8 @@ void MainWindow::on_btn_port_clicked()
         {
             ui->combo_port->setEnabled (false);
             ui->btn_port->setText("Disconnect");
+            ui->combo_baud->setEnabled(false);
+            ui->pushButton_2->setEnabled(false);
             // ui->btn_open->setEnabled(true);
             // ui->btn_program->setEnabled(true);
             // ui->btn_app->setEnabled(true);
@@ -481,6 +503,8 @@ void MainWindow::on_btn_port_clicked()
         else if(!serial->open(QIODevice::ReadWrite))
         {
             ui->combo_port->setEnabled (true);
+            ui->combo_baud->setEnabled(true);
+            ui->pushButton_2->setEnabled(true);
             // ui->btn_open->setEnabled(false);
             // ui->btn_program->setEnabled(false);
             // ui->btn_app->setEnabled(false);
@@ -494,6 +518,8 @@ void MainWindow::on_btn_port_clicked()
     {
         serial->close();
         ui->combo_port->setEnabled (true);
+        ui->combo_baud->setEnabled(true);
+        ui->pushButton_2->setEnabled(true);
         // ui->btn_open->setEnabled(false);
         // ui->btn_program->setEnabled(false);
         // ui->btn_app->setEnabled(false);
@@ -516,14 +542,30 @@ void MainWindow::on_pushButton_2_clicked()
 void MainWindow::sendLength(quint8 cmd)
 {
     QByteArray ba;
-    ba.resize(8);
-    ba[0] = 0xc1;
-    ba[1] = 0xb7;
-    ba[2] = cmd;
-    memcpy(ba.data() + 3, &len, 2);
-    ba[5] = 0x00;
-    ba[6] = 0x0;
-    ba[7] = 0x0;
+    if(SelectDevice==0x00ff0400)
+    {
+        //        ba.resize(8);
+        ba[0] = 0xc1;
+        ba[1] = 0xb7;
+        ba[2] = 'P';
+        ba[3] = cmd;
+        memcpy(ba.data() + 4, &len, 2);
+        ba[6] = 0x0;
+        ba[7] = 0x0;
+        ba[8] = 0x0;
+    }
+    else
+    {
+        //        ba.resize(9);
+        ba[0] = 0xc1;
+        ba[1] = 0xb7;
+        ba[2] = cmd;
+        memcpy(ba.data() + 3, &len, 2);
+        ba[5] = 0x0;
+        ba[6] = 0x0;
+        ba[7] = 0x0;
+    }
+    qDebug()<<__LINE__<<ba.toHex(' ');
     if(ui->rd_serial->isChecked()==true)
         serial->write(ba, ba.length());
     else
@@ -735,4 +777,12 @@ void MainWindow::toggleWidgets()
     ui->tabWidget->setTabEnabled(1,en);
 }
 
+
+
+void MainWindow::on_btn_port_2_clicked()
+{
+//    sendLength(0x55);
+//    index=0;
+   SnedData();
+}
 
