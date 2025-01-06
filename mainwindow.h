@@ -76,9 +76,7 @@ private slots:
 
     void toggleWidgets(void);
 
-    void on_btn_port_2_clicked();
 
-    void on_btn_port_3_clicked();
 
 private:
     Ui::MainWindow *ui;

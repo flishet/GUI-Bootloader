@@ -138,7 +138,7 @@ void MainWindow::SnedData(void)
         ui->btn_app->setEnabled(true);
         ui->btn_boot->setEnabled(true);
         ui->label_2->setText(" ");
-        sendLength(0x17);
+//        sendLength(0x17);
         // qDebug()<<__LINE__<<"--------------------end send";
     }
     else
@@ -182,7 +182,7 @@ void MainWindow::SnedData(void)
             ui->btn_app->setEnabled(true);
             ui->btn_boot->setEnabled(true);
             ui->label_2->setText(" ");
-            sendLength(0x17);
+//            sendLength(0x17);
             // qDebug()<<__LINE__<<"--------------------end send2";
         }
 
@@ -236,7 +236,7 @@ void MainWindow::AckRecive(QByteArray cmd)
         // flag_timeout=false;
         timeout_erase=false;
         timeout2=0;
-        qDebug()<< __LINE__;
+//        qDebug()<< __LINE__;
         flag_send=true;
         ui->label_2->setText("Programming...");
         ui->progressBar->setValue(0);
@@ -251,7 +251,7 @@ void MainWindow::AckRecive(QByteArray cmd)
     case 0x16:{
         timeout2=0;
         index=0;
-        qDebug()<< __LINE__;
+//        qDebug()<< __LINE__;
         flag_write=false;
         sendLength(0x18);
         break;
@@ -263,7 +263,7 @@ void MainWindow::AckRecive(QByteArray cmd)
         index_erase=cmd[1+indx];
         float a=(100.0/15.0*cmd[1+indx]);
         if(a>=100)a=100;
-        qDebug()<<__LINE__<<cmd.toHex(' ')<<(float)a;
+//        qDebug()<<__LINE__<<cmd.toHex(' ')<<(float)a;
         ui->progressBar->setValue(a);
         break;
     }
@@ -285,7 +285,7 @@ void MainWindow::AckRecive(QByteArray cmd)
             // ui->progressBar->setVisible(true);
             // ui->btn_program->setEnabled(false);
             // ui->label_2->setText("Please Reset Micro "+QString::number(timeout,10)+" Second");
-            qDebug()<<__LINE__;
+            qDebug()<<__LINE__<<"Device ok";
             // index=0;
         }
         else
@@ -312,7 +312,6 @@ void MainWindow::AckRecive(QByteArray cmd)
 
 void MainWindow::CheckData(unsigned char Data)
 {
-    // qDebug()<< Data.length()<< ++packet_count;
     quint8 len_recive=0;
     quint16 sum=0;
     quint16 check_sum=0;
@@ -327,7 +326,7 @@ void MainWindow::CheckData(unsigned char Data)
     {
         data[counter_data] = Data;
         if(SelectDevice==0x00ff0400)
-            len_recive=9;
+            len_recive=8;
         else
             len_recive=6;
 
@@ -336,13 +335,13 @@ void MainWindow::CheckData(unsigned char Data)
             if(SelectDevice==0x00ff0400)
             {
                 sum = (quint8)data[5] + (quint8)data[6] + (quint8)data[3] + (quint8)data[4];
-                check_sum = 0;/*(quint8)data[3] + (quint8)data[4] * 256;*/
+                check_sum = 0;
                 memcpy(&check_sum,data.data()+7,2);
             }
             else
             {
                 sum = (quint8)data[1] + (quint8)data[2] + (quint8)data[3] + (quint8)data[4];
-                check_sum = 0;/*(quint8)data[3] + (quint8)data[4] * 256;*/
+                check_sum = 0;
                 memcpy(&check_sum,data.data()+5,2);
             }
             if( sum == check_sum )
@@ -350,8 +349,9 @@ void MainWindow::CheckData(unsigned char Data)
                 //timeout2=0;
                 timeout=20;
                 flag_ok=true;
-                qDebug()<<__LINE__<<hex<<data.toHex(' ');
+//                qDebug()<<__LINE__<<"Recive"<<hex<<data.toHex(' ');
                 AckRecive(data);
+                data.clear();
             }
             else
             {
@@ -372,8 +372,6 @@ void MainWindow::IntervalTimer(void)
 
     val2=val1;
     val1=index;
-
-
 
     // qDebug()<<__LINE__<<val1<<val2<<flag_timeout;
     if((val1==val2 && flag_timeout))
@@ -458,11 +456,13 @@ void MainWindow::IntervalTimer(void)
 
 void MainWindow::ReadyReads(void)
 {
-    QByteArray data;
-    data=serial->readAll();
-    //    qDebug()<<__LINE__<<data.toHex(' ');
-    for(int i=0;i<data.length();i++)
-        CheckData(data[i]);
+    QByteArray tempdata;
+    tempdata=serial->readAll();
+//        qDebug()<<__LINE__<<"Recive serial"<<hex<<tempdata.toHex(' ');
+    for(int i=0;i<tempdata.length();i++)
+    {
+        CheckData(tempdata.at(i));
+    }
 }
 
 void MainWindow::on_btn_open_clicked()
@@ -593,7 +593,7 @@ void MainWindow::sendLength(quint8 cmd)
         ba[6] = 0x0;
         ba[7] = 0x0;
     }
-    qDebug()<<__LINE__<<ba.toHex(' ');
+    qDebug()<<__LINE__<<"Send"<<ba.toHex(' ');
     if(ui->rd_serial->isChecked()==true)
         serial->write(ba, ba.length());
     else
@@ -648,18 +648,20 @@ void MainWindow::on_btn_app_clicked()
 void MainWindow::on_btn_boot_clicked()
 {
     QByteArray ba;
-    ba.resize(7);
+    ba.resize(9);
     ba[0] = 0xc1;
     ba[1] = 0xb7;
     ba[2] = 'P';
     ba[3] = 0x55;
-    ba[4] = 0;
-    ba[5] = 0;
-    ba[6] = 0;
-    ba[7] = 0;
+    ba[4] = 2;
+    ba[5] = 0xaa;
+    ba[6] = 0x55;
+    ba[7] = ba[5]+ba[6];
+    ba[8] = 0;
+    ba[9] = 0x81;
     if(ui->rd_serial->isChecked()==true)
     {
-        serial->write(ba, 8);
+        serial->write(ba,10);
     }
     else
 
@@ -806,17 +808,4 @@ void MainWindow::toggleWidgets()
 }
 
 
-
-void MainWindow::on_btn_port_2_clicked()
-{
-    //    sendLength(0x55);
-    //        index=0;
-    SnedData();
-}
-
-
-void MainWindow::on_btn_port_3_clicked()
-{
-    index--;
-}
 
