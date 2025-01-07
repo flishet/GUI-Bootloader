@@ -84,7 +84,7 @@ void MainWindow::SnedData(void)
 
     temp.append(0xc1);
     temp.append(0xb7);
-    if(SelectDevice==0x00ff0400 || SelectDevice==0x450)
+    if(SelectDevice==0x00ff0400 || SelectDevice==0x450 || SelectDevice==0x281D3F47)
     {
         temp.append('P');
     }
@@ -93,7 +93,7 @@ void MainWindow::SnedData(void)
     if(index>=binfile.length()/16)
     {
         all2byte.all=index;
-        if(SelectDevice==0x00ff0400 || SelectDevice==0x450)
+        if(SelectDevice==0x00ff0400 || SelectDevice==0x450 || SelectDevice==0x281D3F47)
         {
             temp.append(2+binfile.length()%16);
             temp.append(all2byte.byte[0]);
@@ -144,7 +144,7 @@ void MainWindow::SnedData(void)
     else
     {
         all2byte.all=index;
-        if(SelectDevice==0x00ff0400 || SelectDevice==0x450)
+        if(SelectDevice==0x00ff0400 || SelectDevice==0x450 || SelectDevice==0x281D3F47)
         {
             temp.append(18);
             temp.append(all2byte.byte[0]);
@@ -205,7 +205,7 @@ void MainWindow::SnedData(void)
 void MainWindow::AckRecive(QByteArray cmd)
 {
     int data_index=0,indx=0;
-    if(SelectDevice==0x00ff0400 || SelectDevice==0x450)
+    if(SelectDevice==0x00ff0400 || SelectDevice==0x450 || SelectDevice==0x281D3F47)
     {
         indx=2;
         data_index=1;
@@ -325,14 +325,14 @@ void MainWindow::CheckData(unsigned char Data)
     else if(flag_headers == true)
     {
         data[counter_data] = Data;
-        if(SelectDevice==0x00ff0400 || SelectDevice==0x450)
+        if(SelectDevice==0x00ff0400 || SelectDevice==0x450 || SelectDevice==0x281D3F47)
             len_recive=8;
         else
             len_recive=6;
 
         if(counter_data == len_recive)
         {
-            if(SelectDevice==0x00ff0400 || SelectDevice==0x450)
+            if(SelectDevice==0x00ff0400 || SelectDevice==0x450 || SelectDevice==0x281D3F47)
             {
                 sum = (quint8)data[5] + (quint8)data[6] + (quint8)data[3] + (quint8)data[4];
                 check_sum = 0;
@@ -570,7 +570,7 @@ void MainWindow::sendLength(quint8 cmd)
 {
     QByteArray ba;
     uint16_t sum=0;
-    if(SelectDevice==0x00ff0400 || SelectDevice==0x450)
+    if(SelectDevice==0x00ff0400 || SelectDevice==0x450 || SelectDevice==0x281D3F47)
     {
         ba.resize(9);
         ba[0] = 0xc1;
