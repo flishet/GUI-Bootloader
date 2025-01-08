@@ -84,28 +84,17 @@ void MainWindow::SnedData(void)
 
     temp.append(0xc1);
     temp.append(0xb7);
-    if(SelectDevice==0x00ff0400 || SelectDevice==0x450 || SelectDevice==0x281D3F47 || SelectDevice==0x26013F37)
-    {
-        temp.append('P');
-    }
+    temp.append('P');
     temp.append(0x15);
 
     if(index>=binfile.length()/16)
     {
         all2byte.all=index;
-        if(SelectDevice==0x00ff0400 || SelectDevice==0x450 || SelectDevice==0x281D3F47 || SelectDevice==0x26013F37)
-        {
-            temp.append(2+binfile.length()%16);
-            temp.append(all2byte.byte[0]);
-            temp.append(all2byte.byte[1]);
-            sum=all2byte.byte[1]+all2byte.byte[0];
-        }
-        else
-        {
-            temp.append(all2byte.byte[0]);
-            temp.append(all2byte.byte[1]);
-            temp.append(binfile.length()%16);
-        }
+
+        temp.append(2+binfile.length()%16);
+        temp.append(all2byte.byte[0]);
+        temp.append(all2byte.byte[1]);
+        sum=all2byte.byte[1]+all2byte.byte[0];
 
         for(int i=0;i<binfile.length()%16;i++)
         {
@@ -138,25 +127,17 @@ void MainWindow::SnedData(void)
         ui->btn_app->setEnabled(true);
         ui->btn_boot->setEnabled(true);
         ui->label_2->setText(" ");
-//        sendLength(0x17);
+        //        sendLength(0x17);
         // qDebug()<<__LINE__<<"--------------------end send";
     }
     else
     {
         all2byte.all=index;
-        if(SelectDevice==0x00ff0400 || SelectDevice==0x450 || SelectDevice==0x281D3F47)
-        {
-            temp.append(18);
-            temp.append(all2byte.byte[0]);
-            temp.append(all2byte.byte[1]);
-            sum=all2byte.byte[0]+all2byte.byte[1];
-        }
-        else
-        {
-            temp.append(all2byte.byte[0]);
-            temp.append(all2byte.byte[1]);
-            temp.append(16);
-        }
+
+        temp.append(18);
+        temp.append(all2byte.byte[0]);
+        temp.append(all2byte.byte[1]);
+        sum=all2byte.byte[0]+all2byte.byte[1];
 
         for(int i=0;i<16;i++)
         {
@@ -182,7 +163,7 @@ void MainWindow::SnedData(void)
             ui->btn_app->setEnabled(true);
             ui->btn_boot->setEnabled(true);
             ui->label_2->setText(" ");
-//            sendLength(0x17);
+            //            sendLength(0x17);
             // qDebug()<<__LINE__<<"--------------------end send2";
         }
 
@@ -204,24 +185,12 @@ void MainWindow::SnedData(void)
 
 void MainWindow::AckRecive(QByteArray cmd)
 {
-    int data_index=0,indx=0;
-    if(SelectDevice==0x00ff0400 || SelectDevice==0x450 || SelectDevice==0x281D3F47 || SelectDevice==0x26013F37)
-    {
-        indx=2;
-        data_index=1;
-    }
-    else
-    {
-        indx=0;
-        data_index=0;
-    }
-
-    switch (cmd[data_index])
+    switch (cmd[1])
     {
     case 0x15:{
         qDebug()<< __LINE__<< counter_data << data.toHex(' ');
         quint16 value = 0;
-        memcpy(&value, data.data()+1+indx, 2);
+        memcpy(&value, data.data()+3, 2);
         qDebug()<< __LINE__<< ", value:" << (quint16)value << ", index:" << index;
         // flag_timeout=false;
         timeout2=0;
@@ -236,7 +205,7 @@ void MainWindow::AckRecive(QByteArray cmd)
         // flag_timeout=false;
         timeout_erase=false;
         timeout2=0;
-//        qDebug()<< __LINE__;
+        //        qDebug()<< __LINE__;
         flag_send=true;
         ui->label_2->setText("Programming...");
         ui->progressBar->setValue(0);
@@ -251,7 +220,7 @@ void MainWindow::AckRecive(QByteArray cmd)
     case 0x16:{
         timeout2=0;
         index=0;
-//        qDebug()<< __LINE__;
+        //        qDebug()<< __LINE__;
         flag_write=false;
         sendLength(0x18);
         break;
@@ -260,17 +229,17 @@ void MainWindow::AckRecive(QByteArray cmd)
         timeout2=0;
         timeout_erase=true;
         ui->label_2->setText("Erasing...");
-        index_erase=cmd[1+indx];
-        float a=(100.0/15.0*cmd[1+indx]);
+        index_erase=cmd[3];
+        float a=(100.0/15.0*cmd[3]);
         if(a>=100)a=100;
-//        qDebug()<<__LINE__<<cmd.toHex(' ')<<(float)a;
+        //        qDebug()<<__LINE__<<cmd.toHex(' ')<<(float)a;
         ui->progressBar->setValue(a);
         break;
     }
     case 0x20:{
         // flag_timeout=false;
         timeout2=0;
-        memcpy(&DeviceID,cmd.data()+1+indx,4);
+        memcpy(&DeviceID,cmd.data()+3,4);
         qDebug()<<__LINE__<<cmd.toHex(' ');
         qDebug()<<__LINE__<<hex<<DeviceID<<SelectDevice;
         if(SelectDevice==0x450)
@@ -312,7 +281,7 @@ void MainWindow::AckRecive(QByteArray cmd)
 
 void MainWindow::CheckData(unsigned char Data)
 {
-    quint8 len_recive=0;
+    //    quint8 len_recive=0;
     quint16 sum=0;
     quint16 check_sum=0;
     header2 = header1;
@@ -325,25 +294,13 @@ void MainWindow::CheckData(unsigned char Data)
     else if(flag_headers == true)
     {
         data[counter_data] = Data;
-        if(SelectDevice==0x00ff0400 || SelectDevice==0x450 || SelectDevice==0x281D3F47 || SelectDevice==0x26013F37)
-            len_recive=8;
-        else
-            len_recive=6;
 
-        if(counter_data == len_recive)
+        if(counter_data == 8)
         {
-            if(SelectDevice==0x00ff0400 || SelectDevice==0x450 || SelectDevice==0x281D3F47 || SelectDevice==0x26013F37)
-            {
-                sum = (quint8)data[5] + (quint8)data[6] + (quint8)data[3] + (quint8)data[4];
-                check_sum = 0;
-                memcpy(&check_sum,data.data()+7,2);
-            }
-            else
-            {
-                sum = (quint8)data[1] + (quint8)data[2] + (quint8)data[3] + (quint8)data[4];
-                check_sum = 0;
-                memcpy(&check_sum,data.data()+5,2);
-            }
+
+            sum = (quint8)data[5] + (quint8)data[6] + (quint8)data[3] + (quint8)data[4];
+            check_sum = 0;
+            memcpy(&check_sum,data.data()+7,2);
 
             qDebug()<<__LINE__<<"Recive"<<data.toHex(' ');
             if( sum == check_sum )
@@ -351,7 +308,7 @@ void MainWindow::CheckData(unsigned char Data)
                 //timeout2=0;
                 timeout=20;
                 flag_ok=true;
-//                qDebug()<<__LINE__<<"Recive"<<hex<<data.toHex(' ');
+                //                qDebug()<<__LINE__<<"Recive"<<hex<<data.toHex(' ');
                 AckRecive(data);
                 data.clear();
             }
@@ -460,7 +417,7 @@ void MainWindow::ReadyReads(void)
 {
     QByteArray tempdata;
     tempdata=serial->readAll();
-        qDebug()<<__LINE__<<"Recive serial"<<hex<<tempdata.toHex(' ');
+    //        qDebug()<<__LINE__<<"Recive serial"<<hex<<tempdata.toHex(' ');
     for(int i=0;i<tempdata.length();i++)
     {
         CheckData(tempdata.at(i));
@@ -572,29 +529,16 @@ void MainWindow::sendLength(quint8 cmd)
 {
     QByteArray ba;
     uint16_t sum=0;
-    if(SelectDevice==0x00ff0400 || SelectDevice==0x450 || SelectDevice==0x281D3F47 || SelectDevice==0x26013F37)
-    {
-        ba.resize(9);
-        ba[0] = 0xc1;
-        ba[1] = 0xb7;
-        ba[2] = 'P';
-        ba[3] = cmd;
-        ba[4] = 0x2;
-        memcpy(ba.data() + 5, &len, 2);
-        sum=(quint8)ba[5]+(quint8)ba[6];
-        memcpy(ba.data() + 7, &sum, 2);
-    }
-    else
-    {
-        ba.resize(8);
-        ba[0] = 0xc1;
-        ba[1] = 0xb7;
-        ba[2] = cmd;
-        memcpy(ba.data() + 3, &len, 2);
-        ba[5] = 0x0;
-        ba[6] = 0x0;
-        ba[7] = 0x0;
-    }
+    ba.resize(9);
+    ba[0] = 0xc1;
+    ba[1] = 0xb7;
+    ba[2] = 'P';
+    ba[3] = cmd;
+    ba[4] = 0x2;
+    memcpy(ba.data() + 5, &len, 2);
+    sum=(quint8)ba[5]+(quint8)ba[6];
+    memcpy(ba.data() + 7, &sum, 2);
+
     qDebug()<<__LINE__<<"Send"<<ba.toHex(' ');
     if(ui->rd_serial->isChecked()==true)
         serial->write(ba, ba.length());
