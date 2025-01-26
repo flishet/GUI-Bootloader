@@ -19,7 +19,7 @@
 #include <QUdpSocket>
 #include <QShortcut>
 #include <QKeySequence>
-
+#include <QDir>
 
 
 
@@ -67,6 +67,9 @@ private slots:
 
 private:
     QString ip="192.168.1.102";
+    QString filePath ="D:/ali/mohsen/STM/STM.bin";
+    QString filedir = "D:/ali/mohsen4/STM";
+    QDir dir;
     int PortSend=4004;
     int PortRecive=4003;
     Ui::MainWindow *ui;
@@ -106,6 +109,10 @@ private:
         uint8_t byte[2];
         uint16_t all;
     }all2byte;
+
+    QByteArray tempfile;
+    quint16 crc2=0;
+    quint16 len2;
 
 bool flag_tms=false;
     void sendLength(quint8 cmd);
