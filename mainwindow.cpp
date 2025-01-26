@@ -9,48 +9,58 @@ MainWindow::MainWindow(QWidget *parent)
     serial = new QSerialPort(this);
     time = new QTimer(this);
     udpSocket = new QUdpSocket(this);
-    ui->rd_serial->setChecked(true);
-    ui->groupBox_2->setEnabled(true);
+//    ui->rd_serial->setChecked(true);
+//    ui->groupBox_2->setEnabled(true);
 
     udpSocket->close();
-    ui->lineEdit_4->setEnabled(false);
-    ui->lineEdit_5->setEnabled(false);
-    ui->lineEdit_6->setEnabled(false);
+//    ui->lineEdit_4->setEnabled(false);
+//    ui->lineEdit_5->setEnabled(false);
+//    ui->lineEdit_6->setEnabled(false);
 
-    ui->combo_mcu->addItem("LPC1788");
-    ui->combo_mcu->addItem("LPC1768");
-    ui->combo_mcu->addItem("STM32H743");
-    ui->combo_mcu->addItem("TMS320F28377S");
+//    ui->combo_mcu->addItem("LPC1788");
+//    ui->combo_mcu->addItem("LPC1768");
+    ui->combo_mcu->addItem("STM");
+    ui->combo_mcu->addItem("TMS");
 
-    ui->combo_baud->addItem("9600");
-    ui->combo_baud->addItem("115200");
-    ui->combo_baud->addItem("230400");
-    ui->combo_baud->addItem("460800");
-    ui->combo_baud->addItem("921600");
+//    ui->combo_baud->addItem("9600");
+//    ui->combo_baud->addItem("115200");
+//    ui->combo_baud->addItem("230400");
+//    ui->combo_baud->addItem("460800");
+//    ui->combo_baud->addItem("921600");
 
-    ui->tabWidget->setTabEnabled(1,false);
+//    ui->tabWidget->setTabEnabled(1,false);
 
-    connect(shortcut, &QShortcut::activated, this, &MainWindow::toggleWidgets);
-    connect(serial, SIGNAL(readyRead()), this, SLOT(ReadyReads()));
+//    connect(shortcut, &QShortcut::activated, this, &MainWindow::toggleWidgets);
+//    connect(serial, SIGNAL(readyRead()), this, SLOT(ReadyReads()));
     connect(time,SIGNAL(timeout()),this,SLOT(IntervalTimer()));
     connect(udpSocket, &QUdpSocket::readyRead, this, &MainWindow::processPendingDatagrams);
     //    serial->setBaudRate(460800);
-    serial->setDataBits(QSerialPort::Data8);
-    serial->setParity(QSerialPort::NoParity);
-    serial->setStopBits(QSerialPort::OneStop);
-    serial->setFlowControl(QSerialPort::NoFlowControl);
+//    serial->setDataBits(QSerialPort::Data8);
+//    serial->setParity(QSerialPort::NoParity);
+//    serial->setStopBits(QSerialPort::OneStop);
+//    serial->setFlowControl(QSerialPort::NoFlowControl);
     ui->progressBar->setVisible(false);
-    ui->btn_listen->setEnabled(false);
+//    ui->btn_listen->setEnabled(false);
     // ui->btn_open->setEnabled(false);
     // ui->btn_program->setEnabled(false);
     // ui->btn_app->setEnabled(false);
     // ui->btn_boot->setEnabled(false);
-    foreach(QSerialPortInfo port, QSerialPortInfo::availablePorts())
+//    foreach(QSerialPortInfo port, QSerialPortInfo::availablePorts())
+//    {
+//        ui->combo_port->addItem(port.portName());
+//        serial->setPortName (port.portName());
+//        serial->close ();
+//        count_port++;
+//    }
+
+    udpSocket->open(QIODevice::ReadOnly);
+    if (!udpSocket->bind(QHostAddress::AnyIPv4,4003 /*ui->lineEdit_6->text().toInt(nullptr,10)*/))
     {
-        ui->combo_port->addItem(port.portName());
-        serial->setPortName (port.portName());
-        serial->close ();
-        count_port++;
+        qDebug()<< __LINE__ << "Failed to bind UDP socket!";
+    }
+    else
+    {
+        qDebug()<< __LINE__ << "UDP socket bound on port ";
     }
 }
 
@@ -105,14 +115,14 @@ void MainWindow::SnedData(void)
         all2byte.all=sum;
         temp.append(all2byte.byte[0]);
         temp.append(all2byte.byte[1]);
-        if(ui->rd_serial->isChecked()==true)
-        {
-            serial->write(temp,temp.length());
-        }
-        else
-        {
-            udpSocket->writeDatagram(temp, QHostAddress(ui->lineEdit_4->text()), ui->lineEdit_5->text().toInt(nullptr,10));
-        }
+//        if(ui->rd_serial->isChecked()==true)
+//        {
+//            serial->write(temp,temp.length());
+//        }
+//        else
+//        {
+            udpSocket->writeDatagram(temp, QHostAddress(ip),PortSend);
+//        }
         qDebug()<< __LINE__ << temp.toHex(' ');
         temp.clear();
         index++;
@@ -168,14 +178,14 @@ void MainWindow::SnedData(void)
         }
 
 
-        if(ui->rd_serial->isChecked()==true)
-        {
-            serial->write(temp,temp.length());
-        }
-        else
-        {
-            udpSocket->writeDatagram(temp, QHostAddress(ui->lineEdit_4->text()), ui->lineEdit_5->text().toInt(nullptr,10));
-        }
+//        if(ui->rd_serial->isChecked()==true)
+//        {
+//            serial->write(temp,temp.length());
+//        }
+//        else
+//        {
+            udpSocket->writeDatagram(temp, QHostAddress(ip),PortSend);
+//        }
 
         ui->progressBar->setValue((100/(float)len)*index);
         qDebug()<< __LINE__<< temp.toHex(' ');
@@ -451,7 +461,7 @@ void MainWindow::on_btn_open_clicked()
 
             if((binfile.size()%16)!=0)
                 len++;
-            ui->label->setText(QString::number(binfile.size()/1024,10)+"KByte"+" Len="+QString::number(len,10)+"\r\n"+str);
+            ui->label->setText("File Size:"+QString::number(binfile.size(),10)+" Byte"+/*" Len:"+QString::number(len,10)+*/"\r\n"+str);
             flag_file_valid=true;
         }
         else
@@ -468,60 +478,6 @@ void MainWindow::on_btn_open_clicked()
 }
 
 
-void MainWindow::on_btn_port_clicked()
-{
-    serial->setBaudRate(ui->combo_baud->currentText().toInt(nullptr,10));
-    qDebug()<<__LINE__<<serial->baudRate();
-    serial->setPortName(ui->combo_port->currentText()); //ListStr[0]
-    if(serial->isOpen() == false)
-    {
-        if(serial->open(QIODevice::ReadWrite))
-        {
-            ui->combo_port->setEnabled (false);
-            ui->btn_port->setText("Disconnect");
-            ui->combo_baud->setEnabled(false);
-            ui->pushButton_2->setEnabled(false);
-            // ui->btn_open->setEnabled(true);
-            // ui->btn_program->setEnabled(true);
-            // ui->btn_app->setEnabled(true);
-            // ui->btn_boot->setEnabled(true);
-        }
-        else if(!serial->open(QIODevice::ReadWrite))
-        {
-            ui->combo_port->setEnabled (true);
-            ui->combo_baud->setEnabled(true);
-            ui->pushButton_2->setEnabled(true);
-            // ui->btn_open->setEnabled(false);
-            // ui->btn_program->setEnabled(false);
-            // ui->btn_app->setEnabled(false);
-            // ui->btn_boot->setEnabled(false);
-            ui->btn_port->setText("Connect");
-            Msg.setText("This serial port is used by another device");
-            Msg.exec();
-        }
-    }
-    else if(serial->isOpen() == true)
-    {
-        serial->close();
-        ui->combo_port->setEnabled (true);
-        ui->combo_baud->setEnabled(true);
-        ui->pushButton_2->setEnabled(true);
-        // ui->btn_open->setEnabled(false);
-        // ui->btn_program->setEnabled(false);
-        // ui->btn_app->setEnabled(false);
-        // ui->btn_boot->setEnabled(false);
-        ui->btn_port->setText("Connect");
-    }
-}
-
-
-void MainWindow::on_pushButton_2_clicked()
-{
-    ui->combo_port->clear ();
-    foreach(QSerialPortInfo port, QSerialPortInfo::availablePorts()) {
-        ui->combo_port->addItem (port.portName());
-    }
-}
 
 
 
@@ -540,10 +496,10 @@ void MainWindow::sendLength(quint8 cmd)
     memcpy(ba.data() + 7, &sum, 2);
 
     qDebug()<<__LINE__<<"Send"<<ba.toHex(' ');
-    if(ui->rd_serial->isChecked()==true)
-        serial->write(ba, ba.length());
-    else
-        udpSocket->writeDatagram(ba, QHostAddress(ui->lineEdit_4->text()), ui->lineEdit_5->text().toInt(nullptr,10));
+//    if(ui->rd_serial->isChecked()==true)
+//        serial->write(ba, ba.length());
+//    else
+        udpSocket->writeDatagram(ba, QHostAddress(ip), PortSend);
     // qDebug()<<__LINE__<<hex<<cmd;
 }
 
@@ -552,11 +508,11 @@ void MainWindow::on_btn_program_clicked()
     if(flag_file_valid)
     {
         // flag_file_valid=false;
-        if((ui->lineEdit_4->text()=="" || ui->lineEdit_5->text()=="")&& ui->rd_lan->isChecked())
-        {
-            Msg.warning(nullptr,"اخطار","آی پی یا پورت مقصد مشخص نیست",QMessageBox::Ok);
-        }
-        else if(serial->isOpen() || udpSocket->isOpen())
+//        if((ui->lineEdit_4->text()=="" || ui->lineEdit_5->text()=="")&& ui->rd_lan->isChecked())
+//        {
+//            Msg.warning(nullptr,"اخطار","آی پی یا پورت مقصد مشخص نیست",QMessageBox::Ok);
+//        }
+        if(udpSocket->isOpen())
         {
             index=0;
             ui->progressBar->setValue(0);
@@ -573,7 +529,7 @@ void MainWindow::on_btn_program_clicked()
         }
         else
         {
-            Msg.warning(nullptr,"اخطار","پورت سریال باز نیست",QMessageBox::Ok);
+            Msg.warning(nullptr,"اخطار","پورت باز نیست",QMessageBox::Ok);
         }
     }
     else
@@ -605,57 +561,18 @@ void MainWindow::on_btn_boot_clicked()
     ba[7] = ba[5]+ba[6];
     ba[8] = 0;
     ba[9] = 0x81;
-    if(ui->rd_serial->isChecked()==true)
-    {
-        serial->write(ba,10);
-    }
-    else
+//    if(ui->rd_serial->isChecked()==true)
+//    {
+//        serial->write(ba,10);
+//    }
+//    else
 
-    {
-        udpSocket->writeDatagram(ba, QHostAddress(ui->lineEdit_4->text()), ui->lineEdit_5->text().toInt(nullptr,10));
-    }
+//    {
+        udpSocket->writeDatagram(ba, QHostAddress(ip), PortSend);
+//    }
     qDebug()<<__LINE__<<ba.toHex(' ');
 }
 
-
-void MainWindow::on_btn_convert_clicked()
-{
-
-    QString filePath =/*"C:/Users/RayanRoshd/Desktop/mohsen/b.bin";*/ QFileDialog::getOpenFileName(this, "Open Binary File", "", "BIN (*.bin)");
-    if (!filePath.isEmpty())
-    {
-        file.setFileName(filePath);
-        file.open(QIODevice::ReadWrite);
-        binfile=file.readAll();
-        file.close();
-        qDebug()<<__LINE__;
-        len=binfile.size()/16;
-        if((binfile.size()%16)!=0)
-            len++;
-        ui->label->setText(QString::number(binfile.size(),10)+" Byte"+" Len="+QString::number(len,10));
-        if(ui->lineEdit->text()!="" && ui->lineEdit_2->text()!="" && ui->lineEdit_3->text()!="")
-        {
-            QByteArray temp2;
-            quint16 crc=0;
-            QString infofile=ui->lineEdit->text()+" "+ui->lineEdit_2->text()+" "+ui->lineEdit_3->text();
-            temp2.append(infofile.length());
-            temp2.append(infofile.toUtf8());
-            crc=CRC16_Modbus(temp2,temp2.length());
-            memcpy(temp2.data()+temp2.length(),&crc,2);
-            temp2.resize(infofile.length()+3);
-            qDebug()<<temp2.toHex(' ');
-            binfile.prepend(temp2);
-            out.setFileName(QFileDialog::getSaveFileName(this,"Save file","","BIN(*.bin)"));
-            out.open(QIODevice::ReadWrite);
-            out.write(binfile);
-            out.close();
-        }
-        else
-            Msg.warning(nullptr,"اخطار","کادرها نباید خالی باشند",QMessageBox::Ok);
-    }
-    else
-        Msg.warning(nullptr,"اخطار","فایلی انتخاب نشده است",QMessageBox::Ok);
-}
 
 
 uint16_t MainWindow::CRC16_Modbus(QByteArray data, quint16 length)
@@ -683,75 +600,21 @@ uint16_t MainWindow::CRC16_Modbus(QByteArray data, quint16 length)
 
 
 
-void MainWindow::on_rd_lan_clicked(bool checked)
-{
-    if(checked)
-    {
-        ui->btn_listen->setEnabled(true);
-        ui->groupBox_2->setEnabled(false);
-        ui->lineEdit_4->setEnabled(true);
-        ui->lineEdit_5->setEnabled(true);
-        ui->lineEdit_6->setEnabled(true);
-        ui->btn_listen->setEnabled(true);
-        serial->close();
-
-    }
-}
-
-
-void MainWindow::on_rd_serial_clicked(bool checked)
-{
-    if(checked)
-    {
-        ui->groupBox_2->setEnabled(true);
-        udpSocket->close();
-        ui->lineEdit_4->setEnabled(false);
-        ui->lineEdit_5->setEnabled(false);
-        ui->lineEdit_6->setEnabled(false);
-        ui->btn_listen->setEnabled(false);
-        ui->btn_listen->setEnabled(false);
-    }
-}
-
-
-void MainWindow::on_btn_listen_clicked()
-{
-    udpSocket->open(QIODevice::ReadOnly);
-    if(ui->lineEdit_6->text()!="")
-    {
-        if (!udpSocket->bind(QHostAddress::AnyIPv4, ui->lineEdit_6->text().toInt(nullptr,10)))
-        {
-            qDebug()<< __LINE__ << "Failed to bind UDP socket!";
-        }
-        else
-        {
-            qDebug()<< __LINE__ << "UDP socket bound on port "<<ui->lineEdit_6->text();
-        }
-    }
-    else
-        Msg.warning(nullptr,"اخطار","پورت دریافت مشخص نیست",QMessageBox::Ok);
-}
-
 
 void MainWindow::on_combo_mcu_currentTextChanged(const QString &arg1)
 {
-    if(arg1=="LPC1768")
-        SelectDevice=0x26013F37;
-    else if(arg1=="LPC1788")
-        SelectDevice=0x281D3F47;
-    else if(arg1=="STM32H743")
+//    if(arg1=="LPC1768")
+//        SelectDevice=0x26013F37;
+//    else if(arg1=="LPC1788")
+//        SelectDevice=0x281D3F47;
+    if(arg1=="STM")
         SelectDevice=0x450;
-    else if(arg1=="TMS320F28377S")
+    else if(arg1=="TMS")
         SelectDevice=0x00ff0400;
 
     qDebug()<<__LINE__<<hex<<SelectDevice;
 }
 
-void MainWindow::toggleWidgets()
-{
-    bool en=!ui->tabWidget->isTabEnabled(1);
-    ui->tabWidget->setTabEnabled(1,en);
-}
 
 
 

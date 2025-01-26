@@ -42,10 +42,6 @@ private slots:
 
     void on_btn_open_clicked();
 
-    void on_btn_port_clicked();
-
-    void on_pushButton_2_clicked();
-
     void on_btn_program_clicked();
 
     void ReadyReads(void);
@@ -62,23 +58,17 @@ private slots:
 
     void on_btn_app_clicked();
 
-    void on_btn_convert_clicked();
-
     void processPendingDatagrams();
-
-    void on_rd_lan_clicked(bool checked);
-
-    void on_rd_serial_clicked(bool checked);
-
-    void on_btn_listen_clicked();
 
     void on_combo_mcu_currentTextChanged(const QString &arg1);
 
-    void toggleWidgets(void);
 
 
 
 private:
+    QString ip="192.168.1.102";
+    int PortSend=4004;
+    int PortRecive=4003;
     Ui::MainWindow *ui;
     QSerialPort *serial;
     QTimer *time;
