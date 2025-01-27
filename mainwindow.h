@@ -111,6 +111,11 @@ private:
         uint16_t all;
     }all2byte;
 
+    union {
+        uint8_t byte[4];
+        uint32_t all;
+    }uint32tobyte;
+
     QByteArray tempfile;
     quint16 crc2=0;
     quint16 len2;
