@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>525</width>
+    <width>600</width>
     <height>220</height>
    </rect>
   </property>
@@ -24,7 +24,7 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>525</width>
+    <width>600</width>
     <height>220</height>
    </size>
   </property>
@@ -36,9 +36,9 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>150</y>
-      <width>481</width>
-      <height>23</height>
+      <y>160</y>
+      <width>561</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="locale">
@@ -57,10 +57,10 @@
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>20</x>
       <y>110</y>
-      <width>491</width>
-      <height>31</height>
+      <width>561</width>
+      <height>41</height>
      </rect>
     </property>
     <property name="text">
@@ -73,10 +73,10 @@
    <widget class="QPushButton" name="btn_open">
     <property name="geometry">
      <rect>
-      <x>110</x>
-      <y>80</y>
+      <x>130</x>
+      <y>70</y>
       <width>91</width>
-      <height>21</height>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
@@ -86,10 +86,10 @@
    <widget class="QPushButton" name="btn_boot">
     <property name="geometry">
      <rect>
-      <x>410</x>
-      <y>80</y>
-      <width>91</width>
-      <height>21</height>
+      <x>460</x>
+      <y>70</y>
+      <width>121</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
@@ -99,23 +99,23 @@
    <widget class="QPushButton" name="btn_app">
     <property name="geometry">
      <rect>
-      <x>310</x>
-      <y>80</y>
-      <width>91</width>
-      <height>21</height>
+      <x>330</x>
+      <y>70</y>
+      <width>121</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
-     <string>Run Aplication</string>
+     <string>Run Application</string>
     </property>
    </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>20</y>
-      <width>481</width>
-      <height>41</height>
+      <y>10</y>
+      <width>561</width>
+      <height>51</height>
      </rect>
     </property>
     <property name="font">
@@ -132,20 +132,20 @@
    <widget class="QComboBox" name="combo_mcu">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>80</y>
+      <x>60</x>
+      <y>69</y>
       <width>61</width>
-      <height>20</height>
+      <height>31</height>
      </rect>
     </property>
    </widget>
    <widget class="QPushButton" name="btn_program">
     <property name="geometry">
      <rect>
-      <x>210</x>
-      <y>80</y>
+      <x>230</x>
+      <y>70</y>
       <width>91</width>
-      <height>21</height>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
@@ -155,10 +155,10 @@
    <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>80</y>
-      <width>31</width>
-      <height>21</height>
+      <x>20</x>
+      <y>70</y>
+      <width>41</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
@@ -171,6 +171,13 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <tabstops>
+  <tabstop>combo_mcu</tabstop>
+  <tabstop>btn_open</tabstop>
+  <tabstop>btn_program</tabstop>
+  <tabstop>btn_app</tabstop>
+  <tabstop>btn_boot</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

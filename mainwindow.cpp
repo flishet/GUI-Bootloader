@@ -64,50 +64,51 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
 
-    if(!dir.exists(filedir))
-    {
-    dir.mkpath(filedir);
-    }
+//    if(!dir.exists(filedir))
+//    {
+//    dir.mkpath(filedir);
+//    }
 
 
-    if (!filePath.isEmpty())
-    {
-        file.setFileName(filePath);
-        if(file.exists())
-        {
-            file.open(QIODevice::ReadWrite);
-            tempfile=file.readAll();
-            file.close();
-            len2=tempfile[0];
-            quint16 crc=CRC16_Modbus(tempfile,len2+1);
-            memcpy(&crc2,tempfile.data()+len2+1,2);
+//    if (!filePath.isEmpty())
+//    {
+//        file.setFileName(filePath);
+//        if(file.exists())
+//        {
+//            file.open(QIODevice::ReadWrite);
+//            tempfile=file.readAll();
+//            file.close();
+//            len2=tempfile[0];
+//            quint16 crc=CRC16_Modbus(tempfile,len2+1);
+//            memcpy(&crc2,tempfile.data()+len2+1,2);
 
-            if(crc==crc2)
-            {
-                QString str=tempfile.left(len2+1);
-                str=str.remove(0,1);
-                binfile=tempfile.remove(0,len2+3);
-                qDebug()<<binfile.size();
-                len=binfile.size()/16;
-                // qDebug()<<len;
+//            if(crc==crc2)
+//            {
+//                QString str=tempfile.left(len2+1);
+//                str=str.remove(0,1);
+//                binfile=tempfile.remove(0,len2+3);
+//                qDebug()<<binfile.size();
+//                len=binfile.size()/16;
+//                // qDebug()<<len;
 
-                if((binfile.size()%16)!=0)
-                    len++;
-                ui->label->setText("File Size:"+QString::number(binfile.size(),10)+" Byte"+/*" Len:"+QString::number(len,10)+*/"\r\n"+str);
-                flag_file_valid=true;
-            }
-            else
-            {
-                flag_file_valid=false;
-                Msg.warning(nullptr,"اخطار","فایل نا معتبراست",QMessageBox::Ok);
-            }
-        }
-        else
-        {
-            flag_file_valid=false;
-            Msg.warning(nullptr,"اخطار","فایل وجود ندارد",QMessageBox::Ok);
-        }
-    }
+//                if((binfile.size()%16)!=0)
+//                    len++;
+//                ui->label->setText("File Size:"+QString::number(binfile.size(),10)+" Byte"+/*" Len:"+QString::number(len,10)+*/"\r\n"+str);
+//                flag_file_valid=true;
+//            }
+//            else
+//            {
+//                flag_file_valid=false;
+//                Msg.warning(nullptr,"اخطار","فایل نا معتبراست",QMessageBox::Ok);
+//            }
+//        }
+//        else
+//        {
+//            flag_file_valid=false;
+//            Msg.warning(nullptr,"اخطار","فایل وجود ندارد",QMessageBox::Ok);
+//        }
+//    }
+
 }
 
 
@@ -119,7 +120,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::processPendingDatagrams()
 {
-    qDebug()<<__LINE__;
+//    qDebug()<<__LINE__;
     while (udpSocket->hasPendingDatagrams())
     {
         QByteArray buffer;
@@ -127,7 +128,7 @@ void MainWindow::processPendingDatagrams()
         QHostAddress sender;
         quint16 senderPort;
         udpSocket->readDatagram(buffer.data(), buffer.size(),&sender , &senderPort);
-        qDebug() << "Received from" << sender.toString() << ":" << senderPort;
+        qDebug() << "Receive" <<buffer.toHex(' ');
         for(int i=0;i<buffer.length();i++)
             CheckData(buffer[i]);
     }
@@ -161,6 +162,7 @@ void MainWindow::SnedData(void)
         all2byte.all=sum;
         temp.append(all2byte.byte[0]);
         temp.append(all2byte.byte[1]);
+        temp.append(0x81);
         //        if(ui->rd_serial->isChecked()==true)
         //        {
         //            serial->write(temp,temp.length());
@@ -183,7 +185,7 @@ void MainWindow::SnedData(void)
         ui->btn_app->setEnabled(true);
         ui->btn_boot->setEnabled(true);
         ui->label_2->setText(" ");
-        //        sendLength(0x17);
+        flag_app=true;
         // qDebug()<<__LINE__<<"--------------------end send";
     }
     else
@@ -203,6 +205,7 @@ void MainWindow::SnedData(void)
         all2byte.all=sum;
         temp.append(all2byte.byte[0]);
         temp.append(all2byte.byte[1]);
+        temp.append(0x81);
         // qDebug()<<index;
         index++;
 
@@ -219,7 +222,7 @@ void MainWindow::SnedData(void)
             ui->btn_app->setEnabled(true);
             ui->btn_boot->setEnabled(true);
             ui->label_2->setText(" ");
-            //            sendLength(0x17);
+            flag_app=true;
             // qDebug()<<__LINE__<<"--------------------end send2";
         }
 
@@ -250,6 +253,8 @@ void MainWindow::AckRecive(QByteArray cmd)
         qDebug()<< __LINE__<< ", value:" << (quint16)value << ", index:" << index;
         // flag_timeout=false;
         timeout2=0;
+        timeout=20;
+        flag_ok=true;
         if( value + 1 == index )
         {
             flag_headers=false;
@@ -261,7 +266,9 @@ void MainWindow::AckRecive(QByteArray cmd)
         // flag_timeout=false;
         timeout_erase=false;
         timeout2=0;
-        //        qDebug()<< __LINE__;
+        timeout=20;
+        flag_ok=true;
+                qDebug()<< __LINE__<<"finish erase";
         flag_send=true;
         ui->label_2->setText("Programming...");
         ui->progressBar->setValue(0);
@@ -275,14 +282,18 @@ void MainWindow::AckRecive(QByteArray cmd)
     }
     case 0x16:{
         timeout2=0;
+        timeout=20;
+        flag_ok=true;
         index=0;
-        //        qDebug()<< __LINE__;
+                qDebug()<< __LINE__<<"send len";
         flag_write=false;
         sendLength(0x18);
         break;
     }
     case 0x19:{
         timeout2=0;
+        timeout=20;
+        flag_ok=true;
         timeout_erase=true;
         ui->label_2->setText("Erasing...");
         index_erase=cmd[3];
@@ -295,6 +306,8 @@ void MainWindow::AckRecive(QByteArray cmd)
     case 0x20:{
         // flag_timeout=false;
         timeout2=0;
+        timeout=20;
+        flag_ok=true;
         memcpy(&DeviceID,cmd.data()+3,4);
         qDebug()<<__LINE__<<cmd.toHex(' ');
         qDebug()<<__LINE__<<hex<<DeviceID<<SelectDevice;
@@ -358,19 +371,15 @@ void MainWindow::CheckData(unsigned char Data)
             check_sum = 0;
             memcpy(&check_sum,data.data()+7,2);
 
-            qDebug()<<__LINE__<<"Recive"<<data.toHex(' ');
+//            qDebug()<<__LINE__<<"Recive"<<data.toHex(' ');
             if( sum == check_sum )
             {
                 //timeout2=0;
-                timeout=20;
-                flag_ok=true;
+
+//                flag_ok=true;
                 //                qDebug()<<__LINE__<<"Recive"<<hex<<data.toHex(' ');
                 AckRecive(data);
                 data.clear();
-            }
-            else
-            {
-                flag_ok=false;
             }
             flag_headers=false;
             counter_data = 0;
@@ -383,10 +392,22 @@ void MainWindow::CheckData(unsigned char Data)
 
 void MainWindow::IntervalTimer(void)
 {
-    static int timesec=0,timErase=0;
+    static int timesec=0,timErase=0,runapptimeout=0;
+
 
     val2=val1;
     val1=index;
+
+    if(flag_app)
+    {
+        flag_app=false;
+        runapptimeout++;
+        if(runapptimeout>=100)
+        {
+            runapptimeout=0;
+            sendLength(0x17);
+        }
+    }
 
     // qDebug()<<__LINE__<<val1<<val2<<flag_timeout;
     if((val1==val2 && flag_timeout))
@@ -446,6 +467,8 @@ void MainWindow::IntervalTimer(void)
         ui->label_2->setText("Please Reset Micro "+QString::number(timeout,10)+" Second");
         if(timeout==0)
         {
+            timeout=20;
+            flag_ok=false;
             ui->progressBar->setVisible(false);
             ui->btn_program->setEnabled(true);
             ui->combo_mcu->setEnabled(true);
@@ -482,8 +505,13 @@ void MainWindow::ReadyReads(void)
 
 void MainWindow::on_btn_open_clicked()
 {
+    QFileDialog fileDialog;
 
-    filePath =/*"C:/Users/RayanRoshd/Desktop/mohsen/b.bin"; */QFileDialog::getOpenFileName(this, "Open Binary File", "", "BIN (*.bin)");
+    fileDialog.setDirectory("/home/ru550/Desktop/firmware");
+
+    filePath = fileDialog.getOpenFileName(this, "Open Binary File", "", "BIN (*.bin)");
+           // QFileDialog::getOpenFileName(this, "Open Binary File", "", "BIN (*.bin)");
+
     if (!filePath.isEmpty())
     {
         file.setFileName(filePath);
@@ -538,7 +566,7 @@ void MainWindow::sendLength(quint8 cmd)
     memcpy(ba.data() + 5, &len, 2);
     sum=(quint8)ba[5]+(quint8)ba[6];
     memcpy(ba.data() + 7, &sum, 2);
-
+    ba[9]=0x81;
     qDebug()<<__LINE__<<"Send"<<ba.toHex(' ');
     //    if(ui->rd_serial->isChecked()==true)
     //        serial->write(ba, ba.length());
@@ -559,6 +587,7 @@ void MainWindow::on_btn_program_clicked()
         if(udpSocket->isOpen())
         {
             index=0;
+            on_btn_boot_clicked();
             ui->progressBar->setValue(0);
             ui->progressBar->setVisible(true);
             ui->btn_program->setEnabled(false);
@@ -598,7 +627,11 @@ void MainWindow::on_btn_boot_clicked()
     ba[0] = 0xc1;
     ba[1] = 0xb7;
     ba[2] = 'P';
+    if (SelectDevice==0x450)
     ba[3] = 0x55;
+    else if(SelectDevice==0x00ff0400)
+    ba[3] = 0x56;
+
     ba[4] = 2;
     ba[5] = 0xaa;
     ba[6] = 0x55;

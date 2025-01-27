@@ -67,8 +67,8 @@ private slots:
 
 private:
     QString ip="192.168.1.102";
-    QString filePath ="D:/ali/mohsen/STM/STM.bin";
-    QString filedir = "D:/ali/mohsen4/STM";
+    QString filePath ="/home/ru550/Desktop/firmware/";
+    QString filedir = "/home/ru550/Desktop/firmware/STM";
     QDir dir;
     int PortSend=4004;
     int PortRecive=4003;
@@ -99,6 +99,7 @@ private:
     quint16 counter_data;
     bool flag_file_valid=false;
     bool timeout_erase=false;
+    bool flag_app=false;
     quint8 index_erase=0;
     QUdpSocket *udpSocket;
     quint16 timeout=0;
