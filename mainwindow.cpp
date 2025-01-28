@@ -51,7 +51,7 @@ MainWindow::MainWindow(QWidget *parent)
     //        serial->setPortName (port.portName());
     //        serial->close ();
     //        count_port++;
-    //    }
+    //     }
 
     udpSocket->open(QIODevice::ReadOnly);
     if (!udpSocket->bind(QHostAddress::AnyIPv4,4003 /*ui->lineEdit_6->text().toInt(nullptr,10)*/))
