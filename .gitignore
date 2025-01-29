@@ -1,3 +1,7 @@
 /build/
 /debug/
 /release/
+
+Makefile
+Makefile.Debug
+Makefile.Release
