@@ -557,12 +557,14 @@ void MainWindow::on_btn_open_clicked()
         else
         {
             flag_file_valid=false;
+            ui->label->setText("");
             Msg.warning(nullptr,"اخطار","فایل نا معتبر است",QMessageBox::Ok);
         }
     }
     else
     {
         flag_file_valid=false;
+        ui->label->setText("");
         Msg.warning(nullptr,"اخطار","فایلی انتخاب نشده است",QMessageBox::Ok);
     }
 }
