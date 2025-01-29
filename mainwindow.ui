@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
-    <height>220</height>
+    <width>596</width>
+    <height>332</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -24,8 +24,8 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>600</width>
-    <height>220</height>
+    <width>1000</width>
+    <height>1000</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -35,9 +35,9 @@
    <widget class="QProgressBar" name="progressBar">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>160</y>
-      <width>561</width>
+      <x>30</x>
+      <y>270</y>
+      <width>541</width>
       <height>31</height>
      </rect>
     </property>
@@ -57,10 +57,10 @@
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>110</y>
-      <width>561</width>
-      <height>41</height>
+      <x>30</x>
+      <y>230</y>
+      <width>541</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
@@ -73,8 +73,8 @@
    <widget class="QPushButton" name="btn_open">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>70</y>
+      <x>30</x>
+      <y>190</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -86,8 +86,8 @@
    <widget class="QPushButton" name="btn_boot">
     <property name="geometry">
      <rect>
-      <x>460</x>
-      <y>70</y>
+      <x>450</x>
+      <y>190</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -99,8 +99,8 @@
    <widget class="QPushButton" name="btn_app">
     <property name="geometry">
      <rect>
-      <x>320</x>
-      <y>70</y>
+      <x>310</x>
+      <y>190</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -109,13 +109,26 @@
      <string>Run Application</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="btn_program">
+    <property name="geometry">
+     <rect>
+      <x>170</x>
+      <y>190</y>
+      <width>121</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Program</string>
+    </property>
+   </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>10</y>
-      <width>561</width>
-      <height>51</height>
+      <x>310</x>
+      <y>40</y>
+      <width>261</width>
+      <height>131</height>
      </rect>
     </property>
     <property name="font">
@@ -128,18 +141,102 @@
     <property name="text">
      <string/>
     </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+    </property>
    </widget>
-   <widget class="QPushButton" name="btn_program">
+   <widget class="QGroupBox" name="groupBox">
     <property name="geometry">
      <rect>
-      <x>160</x>
-      <y>70</y>
+      <x>30</x>
+      <y>20</y>
       <width>121</width>
-      <height>31</height>
+      <height>161</height>
      </rect>
     </property>
+    <property name="title">
+     <string>Select Hardware</string>
+    </property>
+    <widget class="QComboBox" name="comboBox">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>80</y>
+       <width>81</width>
+       <height>31</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="radioButton_2">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>50</y>
+       <width>91</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Control Panel</string>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="radioButton">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>30</y>
+       <width>84</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Pedestal</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="btn_open_2">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>120</y>
+       <width>81</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Connect</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>170</x>
+      <y>40</y>
+      <width>131</width>
+      <height>131</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>15</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
     <property name="text">
-     <string>Program</string>
+     <string/>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
     </property>
    </widget>
   </widget>

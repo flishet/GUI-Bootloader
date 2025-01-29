@@ -20,6 +20,7 @@
 #include <QShortcut>
 #include <QKeySequence>
 #include <QDir>
+#include <QComboBox>
 
 
 
@@ -60,10 +61,11 @@ private slots:
 
     void processPendingDatagrams();
 
-    void on_combo_mcu_currentTextChanged(const QString &arg1);
+    void on_radioButton_2_clicked(bool checked);
 
+    void on_radioButton_clicked(bool checked);
 
-
+    void on_btn_open_2_clicked();
 
 private:
     QString ip="192.168.1.102";
@@ -123,5 +125,6 @@ private:
 bool flag_tms=false;
     void sendLength(quint8 cmd);
     void AckRecive(QByteArray cmd);
+    int menucom1=0,menucom2=0;
 };
 #endif // MAINWINDOW_H
