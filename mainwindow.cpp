@@ -51,22 +51,23 @@ MainWindow::MainWindow(QWidget *parent)
     foreach(QSerialPortInfo port, QSerialPortInfo::availablePorts())
     {
         listcom.append(port.portName());
-//        ui->comboBox->addItem(port.portName());
+        ui->comboBox->addItem(port.portName());
         serial->setPortName (port.portName());
         serial->close();
         count_port++;
     }
 
-    ui->comboBox->addItems(listcom);
-    qDebug()<<listcom<<listcom.length();
-    udpSocket->open(QIODevice::ReadOnly);
-    if (!udpSocket->bind(QHostAddress::AnyIPv4,4003 /*ui->lineEdit_6->text().toInt(nullptr,10)*/))
+    if(ui->radioButton->isChecked()==true)
     {
-        qDebug()<< __LINE__ << "Failed to bind UDP socket!";
-    }
-    else
-    {
-        qDebug()<< __LINE__ << "UDP socket bound on port ";
+        udpSocket->open(QIODevice::ReadOnly);
+        if (!udpSocket->bind(QHostAddress::AnyIPv4,4003 /*ui->lineEdit_6->text().toInt(nullptr,10)*/))
+        {
+            qDebug()<< __LINE__ << "Failed to bind UDP socket!";
+        }
+        else
+        {
+            qDebug()<< __LINE__ << "UDP socket bound on port ";
+        }
     }
 }
 
@@ -93,8 +94,8 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
         }
         if(count_port>ind)
             ui->comboBox->setCurrentIndex(ind);
-//        else
-//            ui->comboBox->setCurrentIndex(1);
+        //        else
+        //            ui->comboBox->setCurrentIndex(1);
         return true;
     }
     else
@@ -147,7 +148,7 @@ void MainWindow::SnedData(void)
         temp.append(all2byte.byte[0]);
         temp.append(all2byte.byte[1]);
         temp.append(0x81);
-//        index++;
+        //        index++;
 
         if(ui->radioButton_2->isChecked()==true)
         {
@@ -160,7 +161,7 @@ void MainWindow::SnedData(void)
 
         qDebug()<< __LINE__ << temp.toHex(' ');
         temp.clear();
-//        time->stop();
+        //        time->stop();
         flag_timeout=false;
         // qDebug()<<__LINE__<<"stop timer";
         ui->progressBar->setValue((100/(float)len)*index);
@@ -173,7 +174,7 @@ void MainWindow::SnedData(void)
         ui->btn_open->setEnabled(true);
         ui->label_2->setText(" ");
         flag_app=true;
-         qDebug()<<__LINE__<<"--------------------end send";
+        qDebug()<<__LINE__<<"--------------------end send";
     }
     else
     {
@@ -218,7 +219,7 @@ void MainWindow::SnedData(void)
             ui->btn_open->setEnabled(true);
             ui->label_2->setText(" ");
             flag_app=true;
-             qDebug()<<__LINE__<<"--------------------end send2";
+            qDebug()<<__LINE__<<"--------------------end send2";
         }
 
 
@@ -385,7 +386,7 @@ void MainWindow::CheckData(unsigned char Data)
 
 void MainWindow::IntervalTimer(void)
 {
-    static int timesec=0,timErase=0;
+    static int timesec=0,timErase=0,timprog=0;
 
 
     val2=val1;
@@ -480,7 +481,19 @@ void MainWindow::IntervalTimer(void)
 
     if(flag_write)
     {
-        sendLength(0x20);
+        timprog++;
+        if(timprog%2==0)
+        {
+            serial->close();
+            serial->setPortName(listcom.at(indexport));
+            serial->open(QIODevice::ReadWrite);
+            sendLength(0x20);
+            qDebug()<<__LINE__<<listcom.at(indexport)<<indexport<<listcom.length();
+            if(indexport>=listcom.length()-1)
+                indexport=0;
+            else
+                indexport++;
+        }
     }
 }
 
@@ -589,7 +602,18 @@ void MainWindow::on_btn_program_clicked()
         //        {
         //            Msg.warning(nullptr,"اخطار","آی پی یا پورت مقصد مشخص نیست",QMessageBox::Ok);
         //        }
-        if(udpSocket->isOpen())
+        listcom.clear();
+        ui->comboBox->clear();
+        foreach(QSerialPortInfo port, QSerialPortInfo::availablePorts())
+        {
+            listcom.append(port.portName());
+//            ui->comboBox->addItem(port.portName());
+//            serial->setPortName (port.portName());
+//            serial->close();
+            count_port++;
+        }
+
+        if(udpSocket->isOpen() || serial->isOpen())
         {
             index=0;
             ui->progressBar->setValue(0);
@@ -693,6 +717,7 @@ void MainWindow::on_radioButton_2_clicked(bool checked)
 {
     if(checked==true)
     {
+        udpSocket->close();
         ui->comboBox->setEnabled(true);
         ui->btn_open_2->setEnabled(true);
         ui->comboBox->clear();
@@ -712,6 +737,15 @@ void MainWindow::on_radioButton_clicked(bool checked)
 {
     if(checked==true)
     {
+        udpSocket->open(QIODevice::ReadOnly);
+        if (!udpSocket->bind(QHostAddress::AnyIPv4,4003))
+        {
+            qDebug()<< __LINE__ << "Failed to bind UDP socket!";
+        }
+        else
+        {
+            qDebug()<< __LINE__ << "UDP socket bound on port ";
+        }
         ui->btn_open_2->setEnabled(false);
         ui->comboBox->setEnabled(false);
     }
@@ -721,6 +755,7 @@ void MainWindow::on_radioButton_clicked(bool checked)
 
 void MainWindow::on_btn_open_2_clicked()
 {
+
     serial->setPortName(ui->comboBox->currentText());
     if(serial->isOpen() == false)
     {
@@ -728,11 +763,15 @@ void MainWindow::on_btn_open_2_clicked()
         {
             ui->comboBox->setEnabled (false);
             ui->btn_open_2->setText("Disconnect");
+            ui->radioButton->setEnabled(false);
+            ui->radioButton_2->setEnabled(false);
         }
         else if(!serial->open(QIODevice::ReadWrite))
         {
             ui->comboBox->setEnabled (true);
             ui->btn_open_2->setText("Connect");
+            ui->radioButton->setEnabled(true);
+            ui->radioButton_2->setEnabled(true);
             Msg.setText("This serial port is used by another device");
             Msg.exec();
         }
@@ -741,9 +780,11 @@ void MainWindow::on_btn_open_2_clicked()
     {
         serial->close();
         ui->comboBox->setEnabled (true);
+        ui->radioButton->setEnabled(true);
+        ui->radioButton_2->setEnabled(true);
         ui->btn_open_2->setText("Connect");
     }
-//    ui->comboBox->showPopup();
+    //    ui->comboBox->showPopup();
 }
 
 

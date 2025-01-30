@@ -114,6 +114,7 @@ private:
     QStringList listcom;
     quint32 val1=0,val2=0;
     quint8 val3=0,val4=0;
+    int indexport=0;
     union {
         uint8_t byte[2];
         uint16_t all;
