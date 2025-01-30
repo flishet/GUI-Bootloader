@@ -21,6 +21,7 @@
 #include <QKeySequence>
 #include <QDir>
 #include <QComboBox>
+#include <QEvent>
 
 
 
@@ -38,6 +39,8 @@ public:
 
     QShortcut *shortcut = new QShortcut(QKeySequence("Ctrl+k"), this);
 
+protected:
+    bool eventFilter(QObject *obj, QEvent *event)override;
 
 private slots:
 
@@ -66,6 +69,9 @@ private slots:
     void on_radioButton_clicked(bool checked);
 
     void on_btn_open_2_clicked();
+
+    void updateComboBox(void);
+
 
 private:
     QString ip="192.168.1.102";
@@ -105,7 +111,7 @@ private:
     quint8 index_erase=0;
     QUdpSocket *udpSocket;
     quint16 timeout=0;
-
+    QStringList listcom;
     quint32 val1=0,val2=0;
     quint8 val3=0,val4=0;
     union {

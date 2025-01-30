@@ -30,8 +30,10 @@ MainWindow::MainWindow(QWidget *parent)
     //    ui->combo_baud->addItem("921600");
 
     //    ui->tabWidget->setTabEnabled(1,false);
+    ui->comboBox->installEventFilter(this);
 
     //    connect(shortcut, &QShortcut::activated, this, &MainWindow::toggleWidgets);
+    connect(ui->comboBox, &QComboBox::showPopup, this, &MainWindow::updateComboBox);
     connect(serial, SIGNAL(readyRead()), this, SLOT(ReadyReads()));
     connect(time,SIGNAL(timeout()),this,SLOT(IntervalTimer()));
     connect(udpSocket, &QUdpSocket::readyRead, this, &MainWindow::processPendingDatagrams);
@@ -48,12 +50,15 @@ MainWindow::MainWindow(QWidget *parent)
     // ui->btn_boot->setEnabled(false);
     foreach(QSerialPortInfo port, QSerialPortInfo::availablePorts())
     {
-        ui->comboBox->addItem(port.portName());
+        listcom.append(port.portName());
+//        ui->comboBox->addItem(port.portName());
         serial->setPortName (port.portName());
-        serial->close ();
+        serial->close();
         count_port++;
     }
 
+    ui->comboBox->addItems(listcom);
+    qDebug()<<listcom<<listcom.length();
     udpSocket->open(QIODevice::ReadOnly);
     if (!udpSocket->bind(QHostAddress::AnyIPv4,4003 /*ui->lineEdit_6->text().toInt(nullptr,10)*/))
     {
@@ -69,6 +74,32 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+
+bool MainWindow::eventFilter(QObject *obj, QEvent *event)
+{
+    int ind;
+    if (obj == ui->comboBox && event->type() == QEvent::HoverMove)
+    {
+        ind=ui->comboBox->currentIndex();
+        ui->comboBox->clear();
+        foreach(QSerialPortInfo port, QSerialPortInfo::availablePorts())
+        {
+            ui->comboBox->addItem(port.portName());
+            serial->setPortName (port.portName());
+            serial->close();
+            count_port++;
+        }
+        if(count_port>ind)
+            ui->comboBox->setCurrentIndex(ind);
+//        else
+//            ui->comboBox->setCurrentIndex(1);
+        return true;
+    }
+    else
+        return false;
+
 }
 
 
@@ -98,10 +129,9 @@ void MainWindow::SnedData(void)
     temp.append('P');
     temp.append(0x15);
 
-    if(index>=binfile.length()/16)
+    if(index==binfile.length()/16 && binfile.length()%16!=0)
     {
         all2byte.all=index;
-
         temp.append(2+binfile.length()%16);
         temp.append(all2byte.byte[0]);
         temp.append(all2byte.byte[1]);
@@ -117,6 +147,7 @@ void MainWindow::SnedData(void)
         temp.append(all2byte.byte[0]);
         temp.append(all2byte.byte[1]);
         temp.append(0x81);
+//        index++;
 
         if(ui->radioButton_2->isChecked()==true)
         {
@@ -129,8 +160,7 @@ void MainWindow::SnedData(void)
 
         qDebug()<< __LINE__ << temp.toHex(' ');
         temp.clear();
-        index++;
-        time->stop();
+//        time->stop();
         flag_timeout=false;
         // qDebug()<<__LINE__<<"stop timer";
         ui->progressBar->setValue((100/(float)len)*index);
@@ -143,12 +173,11 @@ void MainWindow::SnedData(void)
         ui->btn_open->setEnabled(true);
         ui->label_2->setText(" ");
         flag_app=true;
-        // qDebug()<<__LINE__<<"--------------------end send";
+         qDebug()<<__LINE__<<"--------------------end send";
     }
     else
     {
         all2byte.all=index;
-
         temp.append(18);
         temp.append(all2byte.byte[0]);
         temp.append(all2byte.byte[1]);
@@ -163,10 +192,18 @@ void MainWindow::SnedData(void)
         temp.append(all2byte.byte[0]);
         temp.append(all2byte.byte[1]);
         temp.append(0x81);
-        // qDebug()<<index;
         index++;
 
-        if(index>=binfile.length()/16)
+        if(ui->radioButton_2->isChecked()==true)
+        {
+            serial->write(temp,temp.length());
+        }
+        else
+        {
+            udpSocket->writeDatagram(temp, QHostAddress(ip),PortSend);
+        }
+
+        if(index==binfile.length()/16 && binfile.length()%16==0)
         {
             // time->stop();
             flag_timeout=false;
@@ -181,18 +218,10 @@ void MainWindow::SnedData(void)
             ui->btn_open->setEnabled(true);
             ui->label_2->setText(" ");
             flag_app=true;
-            // qDebug()<<__LINE__<<"--------------------end send2";
+             qDebug()<<__LINE__<<"--------------------end send2";
         }
 
 
-        if(ui->radioButton_2->isChecked()==true)
-        {
-            serial->write(temp,temp.length());
-        }
-        else
-        {
-            udpSocket->writeDatagram(temp, QHostAddress(ip),PortSend);
-        }
 
         ui->progressBar->setValue((100/(float)len)*index);
         qDebug()<< __LINE__<< temp.toHex(' ');
@@ -366,6 +395,7 @@ void MainWindow::IntervalTimer(void)
     {
         qDebug()<<__LINE__<<"Reset mcu"<<flag_app;
         sendLength(0x17);
+        time->stop();
         flag_app=false;
     }
 
@@ -682,6 +712,7 @@ void MainWindow::on_radioButton_clicked(bool checked)
 {
     if(checked==true)
     {
+        ui->btn_open_2->setEnabled(false);
         ui->comboBox->setEnabled(false);
     }
 }
@@ -691,15 +722,48 @@ void MainWindow::on_radioButton_clicked(bool checked)
 void MainWindow::on_btn_open_2_clicked()
 {
     serial->setPortName(ui->comboBox->currentText());
-    if(!serial->isOpen())
+    if(serial->isOpen() == false)
     {
-        serial->open(QIODevice::ReadWrite);
-        ui->btn_open_2->setText("Disconnect");
+        if(serial->open(QIODevice::ReadWrite))
+        {
+            ui->comboBox->setEnabled (false);
+            ui->btn_open_2->setText("Disconnect");
+        }
+        else if(!serial->open(QIODevice::ReadWrite))
+        {
+            ui->comboBox->setEnabled (true);
+            ui->btn_open_2->setText("Connect");
+            Msg.setText("This serial port is used by another device");
+            Msg.exec();
+        }
     }
-    else
+    else if(serial->isOpen() == true)
     {
         serial->close();
+        ui->comboBox->setEnabled (true);
         ui->btn_open_2->setText("Connect");
     }
+//    ui->comboBox->showPopup();
 }
+
+
+
+void MainWindow::updateComboBox()
+{
+
+}
+
+
+//void MainWindow::on_comboBox_activated(int index)
+//{
+//    qDebug()<<"update";
+//         ui->comboBox->clear();
+//         foreach(QSerialPortInfo port, QSerialPortInfo::availablePorts())
+//         {
+//             ui->comboBox->addItem(port.portName());
+//             serial->setPortName (port.portName());
+//             serial->close ();
+//             count_port++;
+//             }
+//}
 
