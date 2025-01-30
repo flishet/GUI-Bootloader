@@ -274,7 +274,7 @@ void MainWindow::AckRecive(QByteArray cmd)
         flag_ok=true;
         index=0;
         qDebug()<< __LINE__<<"send len";
-        flag_write=false;
+//        flag_write=false;
         sendLength(0x18);
         break;
     }
@@ -296,6 +296,7 @@ void MainWindow::AckRecive(QByteArray cmd)
     }
     case 0x20:{
         // flag_timeout=false;
+        flag_write=false;
         timeout2=0;
         timeout=20;
         flag_ok=true;
@@ -481,9 +482,9 @@ void MainWindow::IntervalTimer(void)
 
     if(flag_write)
     {
-        timprog++;
-        if(timprog%2==0)
-        {
+//        timprog++;
+//        if(timprog%1==0)
+//        {
             serial->close();
             serial->setPortName(listcom.at(indexport));
             serial->open(QIODevice::ReadWrite);
@@ -493,7 +494,7 @@ void MainWindow::IntervalTimer(void)
                 indexport=0;
             else
                 indexport++;
-        }
+//        }
     }
 }
 
