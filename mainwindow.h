@@ -92,6 +92,7 @@ private:
     int len=0;
     quint8 header1=0;
     bool flag_send=false;
+    bool flag_port=false;
     quint8 buff_recive[20];
     int count=0;
     quint32 chsum=0;

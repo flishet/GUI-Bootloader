@@ -161,7 +161,7 @@ void MainWindow::SnedData(void)
 
         qDebug()<< __LINE__ << temp.toHex(' ');
         temp.clear();
-        //        time->stop();
+                time->stop();
         flag_timeout=false;
         // qDebug()<<__LINE__<<"stop timer";
         ui->progressBar->setValue((100/(float)len)*index);
@@ -173,7 +173,9 @@ void MainWindow::SnedData(void)
         ui->btn_boot->setEnabled(true);
         ui->btn_open->setEnabled(true);
         ui->label_2->setText(" ");
-        flag_app=true;
+//        flag_app=true;
+        flag_send=false;
+        sendLength(0x17);
         qDebug()<<__LINE__<<"--------------------end send";
     }
     else
@@ -206,9 +208,9 @@ void MainWindow::SnedData(void)
 
         if(index==binfile.length()/16 && binfile.length()%16==0)
         {
-            // time->stop();
+             time->stop();
             flag_timeout=false;
-            // qDebug()<<__LINE__<<"stop timer";
+             qDebug()<<__LINE__<<"stop timer";
             ui->progressBar->setValue((100/(float)len)*index);
             // Msg.information(nullptr,"information","send ok",QMessageBox::Ok);
             ui->progressBar->setVisible(false);
@@ -218,7 +220,9 @@ void MainWindow::SnedData(void)
             ui->btn_boot->setEnabled(true);
             ui->btn_open->setEnabled(true);
             ui->label_2->setText(" ");
-            flag_app=true;
+//            flag_app=true;
+            flag_send=false;
+            sendLength(0x17);
             qDebug()<<__LINE__<<"--------------------end send2";
         }
 
@@ -296,6 +300,7 @@ void MainWindow::AckRecive(QByteArray cmd)
     }
     case 0x20:{
         // flag_timeout=false;
+        flag_port=true;
         flag_write=false;
         timeout2=0;
         timeout=20;
@@ -393,13 +398,14 @@ void MainWindow::IntervalTimer(void)
     val2=val1;
     val1=index;
 
-    if(flag_app)
-    {
-        qDebug()<<__LINE__<<"Reset mcu"<<flag_app;
-        sendLength(0x17);
-        time->stop();
-        flag_app=false;
-    }
+//    if(flag_app)
+//    {
+//        qDebug()<<__LINE__<<"Reset mcu"<<flag_app;
+//        sendLength(0x17);
+//        time->stop();
+//        qDebug()<<__LINE__<<"stop timer";
+//        flag_app=false;
+//    }
 
     // qDebug()<<__LINE__<<val1<<val2<<flag_timeout;
     if((val1==val2 && flag_timeout))
@@ -409,6 +415,7 @@ void MainWindow::IntervalTimer(void)
             flag_timeout=false;
             timeout_erase=false;
             time->stop();
+            qDebug()<<__LINE__<<"stop timer";
             ui->progressBar->setValue(0);
             ui->progressBar->setVisible(false);
             ui->btn_program->setEnabled(true);
@@ -437,6 +444,7 @@ void MainWindow::IntervalTimer(void)
             {
                 timeout_erase=false;
                 time->stop();
+                qDebug()<<__LINE__<<"stop timer";
                 ui->progressBar->setValue(0);
                 ui->progressBar->setVisible(false);
                 ui->btn_program->setEnabled(true);
@@ -472,6 +480,7 @@ void MainWindow::IntervalTimer(void)
             ui->label_2->setText(" ");
             flag_write=false;
             time->stop();
+            qDebug()<<__LINE__<<"stop timer";
         }
     }
 
@@ -483,19 +492,19 @@ void MainWindow::IntervalTimer(void)
 
     if(flag_write)
     {
-        if(ui->radioButton_2->isChecked()==true)
+        if(ui->radioButton_2->isChecked()==true && !flag_port)
         {
             serial->close();
             serial->setPortName(listcom.at(indexport));
             serial->open(QIODevice::ReadWrite);
-            on_btn_boot_clicked();
-//            sendLength(0x20);
             qDebug()<<__LINE__<<listcom.at(indexport)<<indexport<<listcom.length();
             if(indexport>=listcom.length()-1)
                 indexport=0;
             else
                 indexport++;
         }
+
+        on_btn_boot_clicked();
         sendLength(0x20);
     }
 }
@@ -606,7 +615,8 @@ void MainWindow::on_btn_program_clicked()
         //            Msg.warning(nullptr,"اخطار","آی پی یا پورت مقصد مشخص نیست",QMessageBox::Ok);
         //        }
         listcom.clear();
-        ui->comboBox->clear();
+        flag_port=false;
+//        ui->comboBox->clear();
         foreach(QSerialPortInfo port, QSerialPortInfo::availablePorts())
         {
             listcom.append(port.portName());
