@@ -30,10 +30,10 @@ MainWindow::MainWindow(QWidget *parent)
     //    ui->combo_baud->addItem("921600");
 
     //    ui->tabWidget->setTabEnabled(1,false);
-    ui->comboBox->installEventFilter(this);
+    //    ui->comboBox->installEventFilter(this);
 
     //    connect(shortcut, &QShortcut::activated, this, &MainWindow::toggleWidgets);
-    connect(ui->comboBox, &QComboBox::showPopup, this, &MainWindow::updateComboBox);
+
     connect(serial, SIGNAL(readyRead()), this, SLOT(ReadyReads()));
     connect(time,SIGNAL(timeout()),this,SLOT(IntervalTimer()));
     connect(udpSocket, &QUdpSocket::readyRead, this, &MainWindow::processPendingDatagrams);
@@ -51,7 +51,7 @@ MainWindow::MainWindow(QWidget *parent)
     foreach(QSerialPortInfo port, QSerialPortInfo::availablePorts())
     {
         listcom.append(port.portName());
-        ui->comboBox->addItem(port.portName());
+        //        ui->comboBox->addItem(port.portName());
         serial->setPortName (port.portName());
         serial->close();
         count_port++;
@@ -78,30 +78,30 @@ MainWindow::~MainWindow()
 }
 
 
-bool MainWindow::eventFilter(QObject *obj, QEvent *event)
-{
-    int ind;
-    if (obj == ui->comboBox && event->type() == QEvent::HoverMove)
-    {
-        ind=ui->comboBox->currentIndex();
-        ui->comboBox->clear();
-        foreach(QSerialPortInfo port, QSerialPortInfo::availablePorts())
-        {
-            ui->comboBox->addItem(port.portName());
-            serial->setPortName (port.portName());
-            serial->close();
-            count_port++;
-        }
-        if(count_port>ind)
-            ui->comboBox->setCurrentIndex(ind);
-        //        else
-        //            ui->comboBox->setCurrentIndex(1);
-        return true;
-    }
-    else
-        return false;
+//bool MainWindow::eventFilter(QObject *obj, QEvent *event)
+//{
+//    int ind;
+//    if (obj == ui->comboBox && event->type() == QEvent::HoverMove)
+//    {
+//        ind=ui->comboBox->currentIndex();
+//        ui->comboBox->clear();
+//        foreach(QSerialPortInfo port, QSerialPortInfo::availablePorts())
+//        {
+//            ui->comboBox->addItem(port.portName());
+//            serial->setPortName (port.portName());
+//            serial->close();
+//            count_port++;
+//        }
+//        if(count_port>ind)
+//            ui->comboBox->setCurrentIndex(ind);
+//        //        else
+//        //            ui->comboBox->setCurrentIndex(1);
+//        return true;
+//    }
+//    else
+//        return false;
 
-}
+//}
 
 
 void MainWindow::processPendingDatagrams()
@@ -161,7 +161,7 @@ void MainWindow::SnedData(void)
 
         qDebug()<< __LINE__ << temp.toHex(' ');
         temp.clear();
-                time->stop();
+        time->stop();
         flag_timeout=false;
         // qDebug()<<__LINE__<<"stop timer";
         ui->progressBar->setValue((100/(float)len)*index);
@@ -172,8 +172,9 @@ void MainWindow::SnedData(void)
         ui->btn_app->setEnabled(true);
         ui->btn_boot->setEnabled(true);
         ui->btn_open->setEnabled(true);
+        ui->groupBox->setEnabled(true);
         ui->label_2->setText(" ");
-//        flag_app=true;
+        //        flag_app=true;
         flag_send=false;
         sendLength(0x17);
         qDebug()<<__LINE__<<"--------------------end send";
@@ -208,9 +209,9 @@ void MainWindow::SnedData(void)
 
         if(index==binfile.length()/16 && binfile.length()%16==0)
         {
-             time->stop();
+            time->stop();
             flag_timeout=false;
-             qDebug()<<__LINE__<<"stop timer";
+            qDebug()<<__LINE__<<"stop timer";
             ui->progressBar->setValue((100/(float)len)*index);
             // Msg.information(nullptr,"information","send ok",QMessageBox::Ok);
             ui->progressBar->setVisible(false);
@@ -219,8 +220,9 @@ void MainWindow::SnedData(void)
             ui->btn_app->setEnabled(true);
             ui->btn_boot->setEnabled(true);
             ui->btn_open->setEnabled(true);
+            ui->groupBox->setEnabled(true);
             ui->label_2->setText(" ");
-//            flag_app=true;
+            //            flag_app=true;
             flag_send=false;
             sendLength(0x17);
             qDebug()<<__LINE__<<"--------------------end send2";
@@ -278,7 +280,7 @@ void MainWindow::AckRecive(QByteArray cmd)
         flag_ok=true;
         index=0;
         qDebug()<< __LINE__<<"send len";
-//        flag_write=false;
+        //        flag_write=false;
         sendLength(0x18);
         break;
     }
@@ -392,20 +394,17 @@ void MainWindow::CheckData(unsigned char Data)
 
 void MainWindow::IntervalTimer(void)
 {
-    static int timesec=0,timErase=0;
-
-
     val2=val1;
     val1=index;
 
-//    if(flag_app)
-//    {
-//        qDebug()<<__LINE__<<"Reset mcu"<<flag_app;
-//        sendLength(0x17);
-//        time->stop();
-//        qDebug()<<__LINE__<<"stop timer";
-//        flag_app=false;
-//    }
+    //    if(flag_app)
+    //    {
+    //        qDebug()<<__LINE__<<"Reset mcu"<<flag_app;
+    //        sendLength(0x17);
+    //        time->stop();
+    //        qDebug()<<__LINE__<<"stop timer";
+    //        flag_app=false;
+    //    }
 
     // qDebug()<<__LINE__<<val1<<val2<<flag_timeout;
     if((val1==val2 && flag_timeout))
@@ -424,9 +423,10 @@ void MainWindow::IntervalTimer(void)
             ui->btn_open->setEnabled(true);
             ui->btn_boot->setEnabled(true);
             ui->btn_app->setEnabled(true);
+            ui->groupBox->setEnabled(true);
             // flag_write=true;
             // time->start(20);
-            // flag_ok=false;
+            //             flag_ok=false;
             // timeout=20;
             Msg.warning(nullptr,"اخطار","ارتباط قطع شد",QMessageBox::Ok);
         }
@@ -452,35 +452,40 @@ void MainWindow::IntervalTimer(void)
                 ui->label_2->setText("");
                 ui->btn_app->setEnabled(true);
                 ui->btn_boot->setEnabled(true);
+                ui->groupBox->setEnabled(true);
                 // flag_write=true;
                 // time->start(20);
-                // flag_ok=false;
+                //                 flag_ok=false;
                 // timeout=20;
                 Msg.warning(nullptr,"اخطار","ارتباط قطع شد",QMessageBox::Ok);
             }
         }
     }
 
-    if(++timesec>=50 && !flag_ok)
+    if(!flag_ok)
     {
-        timesec=0;
-        timeout--;
-        if(ui->radioButton->isChecked()==true)
-            on_btn_boot_clicked();
-        ui->label_2->setText("Please Reset Micro "+QString::number(timeout,10)+" Second");
-        if(timeout==0)
+        if(++timesec>=set_timeout)
         {
-            timeout=20;
-            flag_ok=false;
-            ui->progressBar->setVisible(false);
-            ui->btn_program->setEnabled(true);
-            //            ui->combo_mcu->setEnabled(true);
-            ui->btn_app->setEnabled(true);
-            ui->btn_boot->setEnabled(true);
-            ui->label_2->setText(" ");
-            flag_write=false;
-            time->stop();
-            qDebug()<<__LINE__<<"stop timer";
+            timesec=0;
+            timeout--;
+            if(ui->radioButton->isChecked()==true)
+                on_btn_boot_clicked();
+            ui->label_2->setText("Please Reset Micro "+QString::number(timeout,10)+" Second");
+            if(timeout==0)
+            {
+                timeout=20;
+                flag_ok=false;
+                ui->groupBox->setEnabled(true);
+                ui->progressBar->setVisible(false);
+                ui->btn_program->setEnabled(true);
+                //            ui->combo_mcu->setEnabled(true);
+                ui->btn_app->setEnabled(true);
+                ui->btn_boot->setEnabled(true);
+                ui->label_2->setText(" ");
+                flag_write=false;
+                time->stop();
+                qDebug()<<__LINE__<<"stop timer";
+            }
         }
     }
 
@@ -513,7 +518,7 @@ void MainWindow::ReadyReads(void)
 {
     QByteArray tempdata;
     tempdata=serial->readAll();
-//            qDebug()<<__LINE__<<"Recive serial"<<hex<<tempdata.toHex(' ');
+    //            qDebug()<<__LINE__<<"Recive serial"<<hex<<tempdata.toHex(' ');
     for(int i=0;i<tempdata.length();i++)
     {
         CheckData(tempdata.at(i));
@@ -616,13 +621,14 @@ void MainWindow::on_btn_program_clicked()
         //        }
         listcom.clear();
         flag_port=false;
-//        ui->comboBox->clear();
+        ui->groupBox->setEnabled(false);
+        //        ui->comboBox->clear();
         foreach(QSerialPortInfo port, QSerialPortInfo::availablePorts())
         {
             listcom.append(port.portName());
-//            ui->comboBox->addItem(port.portName());
-//            serial->setPortName (port.portName());
-//            serial->close();
+            //            ui->comboBox->addItem(port.portName());
+            //            serial->setPortName (port.portName());
+            //            serial->close();
             count_port++;
         }
 
@@ -731,12 +737,15 @@ void MainWindow::on_radioButton_2_clicked(bool checked)
     if(checked==true)
     {
         udpSocket->close();
-        ui->comboBox->setEnabled(true);
-        ui->btn_open_2->setEnabled(true);
-        ui->comboBox->clear();
+        //        ui->comboBox->setEnabled(true);
+        //        ui->btn_open_2->setEnabled(true);
+        //        ui->comboBox->clear();
+        listcom.clear();
+        set_timeout=15;
         foreach(QSerialPortInfo port, QSerialPortInfo::availablePorts())
         {
-            ui->comboBox->addItem(port.portName());
+            //            ui->comboBox->addItem(port.portName());
+            listcom.append(port.portName());
             serial->setPortName (port.portName());
             serial->close ();
             count_port++;
@@ -750,6 +759,7 @@ void MainWindow::on_radioButton_clicked(bool checked)
 {
     if(checked==true)
     {
+        set_timeout=50;
         udpSocket->open(QIODevice::ReadOnly);
         if (!udpSocket->bind(QHostAddress::AnyIPv4,4003))
         {
@@ -759,46 +769,46 @@ void MainWindow::on_radioButton_clicked(bool checked)
         {
             qDebug()<< __LINE__ << "UDP socket bound on port ";
         }
-        ui->btn_open_2->setEnabled(false);
-        ui->comboBox->setEnabled(false);
+        //        ui->btn_open_2->setEnabled(false);
+        //        ui->comboBox->setEnabled(false);
     }
 }
 
 
 
-void MainWindow::on_btn_open_2_clicked()
-{
+//void MainWindow::on_btn_open_2_clicked()
+//{
 
-    serial->setPortName(ui->comboBox->currentText());
-    if(serial->isOpen() == false)
-    {
-        if(serial->open(QIODevice::ReadWrite))
-        {
-            ui->comboBox->setEnabled (false);
-            ui->btn_open_2->setText("Disconnect");
-            ui->radioButton->setEnabled(false);
-            ui->radioButton_2->setEnabled(false);
-        }
-        else if(!serial->open(QIODevice::ReadWrite))
-        {
-            ui->comboBox->setEnabled (true);
-            ui->btn_open_2->setText("Connect");
-            ui->radioButton->setEnabled(true);
-            ui->radioButton_2->setEnabled(true);
-            Msg.setText("This serial port is used by another device");
-            Msg.exec();
-        }
-    }
-    else if(serial->isOpen() == true)
-    {
-        serial->close();
-        ui->comboBox->setEnabled (true);
-        ui->radioButton->setEnabled(true);
-        ui->radioButton_2->setEnabled(true);
-        ui->btn_open_2->setText("Connect");
-    }
-    //    ui->comboBox->showPopup();
-}
+//    serial->setPortName(ui->comboBox->currentText());
+//    if(serial->isOpen() == false)
+//    {
+//        if(serial->open(QIODevice::ReadWrite))
+//        {
+//            ui->comboBox->setEnabled (false);
+//            ui->btn_open_2->setText("Disconnect");
+//            ui->radioButton->setEnabled(false);
+//            ui->radioButton_2->setEnabled(false);
+//        }
+//        else if(!serial->open(QIODevice::ReadWrite))
+//        {
+//            ui->comboBox->setEnabled (true);
+//            ui->btn_open_2->setText("Connect");
+//            ui->radioButton->setEnabled(true);
+//            ui->radioButton_2->setEnabled(true);
+//            Msg.setText("This serial port is used by another device");
+//            Msg.exec();
+//        }
+//    }
+//    else if(serial->isOpen() == true)
+//    {
+//        serial->close();
+//        ui->comboBox->setEnabled (true);
+//        ui->radioButton->setEnabled(true);
+//        ui->radioButton_2->setEnabled(true);
+//        ui->btn_open_2->setText("Connect");
+//    }
+//    //    ui->comboBox->showPopup();
+//}
 
 
 

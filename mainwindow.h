@@ -39,8 +39,8 @@ public:
 
     QShortcut *shortcut = new QShortcut(QKeySequence("Ctrl+k"), this);
 
-protected:
-    bool eventFilter(QObject *obj, QEvent *event)override;
+//protected:
+//    bool eventFilter(QObject *obj, QEvent *event)override;
 
 private slots:
 
@@ -68,7 +68,7 @@ private slots:
 
     void on_radioButton_clicked(bool checked);
 
-    void on_btn_open_2_clicked();
+//    void on_btn_open_2_clicked();
 
     void updateComboBox(void);
 
@@ -116,6 +116,8 @@ private:
     quint32 val1=0,val2=0;
     quint8 val3=0,val4=0;
     int indexport=0;
+    int timesec=0,timErase=0;
+    int set_timeout=50;
     union {
         uint8_t byte[2];
         uint16_t all;
