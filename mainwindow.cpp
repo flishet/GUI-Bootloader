@@ -387,7 +387,7 @@ void MainWindow::CheckData(unsigned char Data)
 
 void MainWindow::IntervalTimer(void)
 {
-    static int timesec=0,timErase=0,timprog=0;
+    static int timesec=0,timErase=0;
 
 
     val2=val1;
@@ -457,7 +457,8 @@ void MainWindow::IntervalTimer(void)
     {
         timesec=0;
         timeout--;
-        on_btn_boot_clicked();
+        if(ui->radioButton->isChecked()==true)
+            on_btn_boot_clicked();
         ui->label_2->setText("Please Reset Micro "+QString::number(timeout,10)+" Second");
         if(timeout==0)
         {
@@ -482,19 +483,20 @@ void MainWindow::IntervalTimer(void)
 
     if(flag_write)
     {
-//        timprog++;
-//        if(timprog%1==0)
-//        {
+        if(ui->radioButton_2->isChecked()==true)
+        {
             serial->close();
             serial->setPortName(listcom.at(indexport));
             serial->open(QIODevice::ReadWrite);
-            sendLength(0x20);
+            on_btn_boot_clicked();
+//            sendLength(0x20);
             qDebug()<<__LINE__<<listcom.at(indexport)<<indexport<<listcom.length();
             if(indexport>=listcom.length()-1)
                 indexport=0;
             else
                 indexport++;
-//        }
+        }
+        sendLength(0x20);
     }
 }
 
@@ -502,7 +504,7 @@ void MainWindow::ReadyReads(void)
 {
     QByteArray tempdata;
     tempdata=serial->readAll();
-    //        qDebug()<<__LINE__<<"Recive serial"<<hex<<tempdata.toHex(' ');
+//            qDebug()<<__LINE__<<"Recive serial"<<hex<<tempdata.toHex(' ');
     for(int i=0;i<tempdata.length();i++)
     {
         CheckData(tempdata.at(i));
@@ -614,7 +616,7 @@ void MainWindow::on_btn_program_clicked()
             count_port++;
         }
 
-        if(udpSocket->isOpen() || serial->isOpen())
+        if(udpSocket->isOpen() || ui->radioButton_2->isChecked())
         {
             index=0;
             ui->progressBar->setValue(0);

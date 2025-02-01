@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>596</width>
-    <height>332</height>
+    <width>547</width>
+    <height>340</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -31,13 +31,16 @@
   <property name="windowTitle">
    <string notr="true">GUI Bootloader</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QProgressBar" name="progressBar">
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>270</y>
-      <width>541</width>
+      <y>280</y>
+      <width>491</width>
       <height>31</height>
      </rect>
     </property>
@@ -58,8 +61,8 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>230</y>
-      <width>541</width>
+      <y>240</y>
+      <width>491</width>
       <height>31</height>
      </rect>
     </property>
@@ -75,9 +78,12 @@
      <rect>
       <x>30</x>
       <y>190</y>
-      <width>121</width>
-      <height>31</height>
+      <width>111</width>
+      <height>41</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
     </property>
     <property name="text">
      <string>Open</string>
@@ -86,11 +92,14 @@
    <widget class="QPushButton" name="btn_boot">
     <property name="geometry">
      <rect>
-      <x>450</x>
+      <x>410</x>
       <y>190</y>
-      <width>121</width>
-      <height>31</height>
+      <width>111</width>
+      <height>41</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
     </property>
     <property name="text">
      <string>Run Bootloader</string>
@@ -99,11 +108,14 @@
    <widget class="QPushButton" name="btn_app">
     <property name="geometry">
      <rect>
-      <x>310</x>
+      <x>280</x>
       <y>190</y>
-      <width>121</width>
-      <height>31</height>
+      <width>111</width>
+      <height>41</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
     </property>
     <property name="text">
      <string>Run Application</string>
@@ -112,11 +124,14 @@
    <widget class="QPushButton" name="btn_program">
     <property name="geometry">
      <rect>
-      <x>170</x>
+      <x>160</x>
       <y>190</y>
-      <width>121</width>
-      <height>31</height>
+      <width>101</width>
+      <height>41</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
     </property>
     <property name="text">
      <string>Program</string>
@@ -127,7 +142,7 @@
      <rect>
       <x>310</x>
       <y>40</y>
-      <width>261</width>
+      <width>211</width>
       <height>131</height>
      </rect>
     </property>
