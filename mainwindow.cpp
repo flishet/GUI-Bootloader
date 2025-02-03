@@ -6,6 +6,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    this->setWindowFlags(Qt::WindowStaysOnTopHint);
     serial = new QSerialPort(this);
     time = new QTimer(this);
     udpSocket = new QUdpSocket(this);
@@ -518,7 +519,7 @@ void MainWindow::ReadyReads(void)
 {
     QByteArray tempdata;
     tempdata=serial->readAll();
-    //            qDebug()<<__LINE__<<"Recive serial"<<hex<<tempdata.toHex(' ');
+                qDebug()<<__LINE__<<"Recive serial"<<hex<<tempdata.toHex(' ');
     for(int i=0;i<tempdata.length();i++)
     {
         CheckData(tempdata.at(i));
